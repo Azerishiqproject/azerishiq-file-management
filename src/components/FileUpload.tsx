@@ -40,7 +40,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         return null;
     };
 
-    const validateFile = (file: File): boolean => {
+    const validateFile = useCallback((file: File) => {
         if (!allowedTypes.includes(file.type)) {
             setError('Sadece PDF, Word ve Excel dosyaları yüklenebilir.');
             return false;
@@ -53,7 +53,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         }
 
         return true;
-    };
+    }, [allowedTypes]);
 
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -67,7 +67,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, []);
+    }, [validateFile]);
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -88,7 +88,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, []);
+    }, [validateFile]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
