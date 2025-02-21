@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import Sidebar from '@/components/Sidebar';
@@ -11,10 +11,9 @@ import {
     updatePassword, 
     signInWithEmailAndPassword,
     getAuth,
-    sendPasswordResetEmail,
     deleteUser
 } from 'firebase/auth';
-import { doc, setDoc, collection, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { UserRole } from '@/types/user';
 
@@ -61,7 +60,7 @@ export default function AdminPage() {
         fetchUsers();
     }, [handleProtectedNavigation]);
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (): Promise<FirestoreUser[]> => {
         try {
             const usersCollection = collection(db, 'users');
             const usersSnapshot = await getDocs(usersCollection);
@@ -70,9 +69,11 @@ export default function AdminPage() {
                 uid: doc.id,
             })) as FirestoreUser[];
             setUsers(usersList);
+            return usersList;
         } catch (error) {
             console.error('Error fetching users:', error);
             setError('Kullanıcılar yüklenirken bir hata oluştu.');
+            return [];
         } finally {
             setIsLoading(false);
         }
