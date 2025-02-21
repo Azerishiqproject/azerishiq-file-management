@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { FileData, FileType } from '@/types/file';
-import { UserRole } from '@/types/user';
 import { motion } from 'framer-motion';
 import { FiDownload, FiTrash2, FiEye, FiDownloadCloud } from 'react-icons/fi';
 

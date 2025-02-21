@@ -6,6 +6,7 @@ export interface FileData {
     size: number;
     type: string;
     uploadedAt: string;
+    createdAt: string;
     downloadURL: string;
     path: string;
     status: 'active' | 'deleted';
