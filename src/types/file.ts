@@ -6,7 +6,6 @@ export interface FileData {
     size: number;
     type: string;
     uploadedAt: string;
-    createdAt: string;
     downloadURL: string;
     path: string;
     status: 'active' | 'deleted';
@@ -14,6 +13,7 @@ export interface FileData {
     downloads: number;
     uploadedBy: string;
     uploadedByEmail: string;
+    url: string;
 }
 
-export type FileType = 'pdf' | 'doc' | 'docx' | 'xls' | 'xlsx' | 'other'; 
+export type FileType = 'pdf' | 'doc' | 'docx' | 'xls' | 'xlsx' | 'other' | 'word' | 'excel'; 

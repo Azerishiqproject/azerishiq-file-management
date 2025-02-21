@@ -12,7 +12,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
+    const pathname = usePathname();
     const router = useRouter();
 
     // Firebase persistence ayarı ve token yenileme
@@ -72,6 +73,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => clearInterval(tokenRefreshInterval);
     }, []);
+
+    // Firestore'dan kullanıcı verilerini al
+    const getUserData = async (user: User) => {
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                return userSnap.data() as UserData;
+            } else {
+                const newUserData: UserData = {
+                    uid: user.uid,
+                    email: user.email,
+                    role: 'user'
+                };
+                await setDoc(userRef, newUserData);
+                return newUserData;
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            return null;
+        }
+    };
 
     // Auth state değişikliklerini izle
     useEffect(() => {

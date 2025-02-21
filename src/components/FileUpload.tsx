@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { FileData as CustomFile, FileType } from '@/types/file';
 import { motion } from 'framer-motion';
 
 interface FileUploadProps {
-    onUpload: (file: File) => void;
+    onUpload: (file: CustomFile) => void;
 }
 
 interface FileFormData {
@@ -32,14 +33,14 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
 
-    const getFileType = (mimeType: string): string | null => {
+    const getFileType = (mimeType: string): FileType | null => {
         if (mimeType === 'application/pdf') return 'pdf';
-        if (mimeType.includes('word')) return 'doc';
-        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'xls';
+        if (mimeType.includes('word')) return 'word';
+        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'excel';
         return null;
     };
 
-    const validateFile = useCallback((file: File) => {
+    const validateFile = (file: File): boolean => {
         if (!allowedTypes.includes(file.type)) {
             setError('Sadece PDF, Word ve Excel dosyaları yüklenebilir.');
             return false;
@@ -52,7 +53,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         }
 
         return true;
-    }, [allowedTypes]);
+    };
 
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -66,7 +67,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, [validateFile]);
+    }, []);
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -87,7 +88,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, [validateFile]);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -111,7 +112,23 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
 
             const fileUrl = window.URL.createObjectURL(new Blob([formData.file]));
 
-            const customFile = new File([formData.file], formData.title, { type: formData.file.type });
+            const customFile: CustomFile = {
+                id: Date.now().toString(),
+                name: formData.title,
+                title: formData.title,
+                description: formData.description,
+                size: formData.file.size,
+                type: fileType,
+                uploadedBy: 'current-user',
+                uploadedAt: new Date().toISOString(),
+                downloadURL: '',
+                path: '',
+                status: 'active',
+                views: 0,
+                downloads: 0,
+                uploadedByEmail: 'current-user@example.com',
+                url: fileUrl,
+            };
 
             onUpload(customFile);
             

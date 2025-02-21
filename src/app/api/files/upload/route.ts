@@ -9,18 +9,18 @@ if (!getApps().length) {
     try {
         const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
         console.log('Initializing Firebase Admin with:', {
-            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+            projectId: process.env.FIREBASE_PROJECT_ID,
             hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
             hasPrivateKey: !!privateKey
         });
 
         app = initializeApp({
             credential: cert({
-                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey: privateKey
             }),
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET
         });
         console.log('Firebase Admin initialized successfully');
     } catch (error) {

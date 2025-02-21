@@ -4,12 +4,11 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const s3Client = new S3Client({
     region: 'auto',
-    // Removed Cloudflare references
-    // endpoint: `https://${process.env.FIREBASE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    // credentials: {
-    //     accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID || '',
-    //     secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY || '',
-    // },
+    endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: process.env.CLOUDFLARE_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.CLOUDFLARE_SECRET_ACCESS_KEY || '',
+    },
 });
 
 export async function GET(request: Request) {
@@ -31,7 +30,7 @@ export async function GET(request: Request) {
         const decodedPath = decodeURIComponent(filePath);
 
         const command = new GetObjectCommand({
-            Bucket: 'your-bucket-name', // Replace with your actual bucket name or remove if not needed
+            Bucket: process.env.CLOUDFLARE_BUCKET_NAME,
             Key: decodedPath
         });
 

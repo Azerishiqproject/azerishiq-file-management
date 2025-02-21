@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminStorage } from '@/lib/firebase-admin';
+import { getFirestore } from 'firebase-admin/firestore';
 
 export async function DELETE(request: Request) {
     try {
