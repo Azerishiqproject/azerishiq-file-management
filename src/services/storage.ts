@@ -1,8 +1,7 @@
 import { FileData } from '@/types/file';
 import { toast } from 'react-hot-toast';
 import { db } from '@/config/firebase';
-import { collection, getDocs, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore';
-import { getStorage, ref, deleteObject } from 'firebase/storage';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 
 // API endpoint'leri
 const API_ENDPOINTS = {
@@ -14,7 +13,6 @@ const API_ENDPOINTS = {
 
 // Firestore koleksiyonu
 const docsCollection = collection(db, 'docs');
-const storage = getStorage();
 
 // Hata işleme yardımcı fonksiyonu
 const handleError = (error: unknown, message: string) => {
@@ -35,24 +33,22 @@ export const listFiles = async (): Promise<FileData[]> => {
 
         // Dokümanları dönüştür
         const files = querySnapshot.docs.map(doc => ({
-            ...doc.data(),
             id: doc.id,
             name: doc.data().name || '',
-            title: doc.data().name || '',
+            title: doc.data().title || '',
             description: doc.data().description || '',
             size: doc.data().size || 0,
-            type: 'pdf',
-            uploadedAt: new Date().toISOString(),
+            type: doc.data().type || 'unknown',
+            uploadedAt: doc.data().uploadedAt ? doc.data().uploadedAt.toDate().toISOString() : new Date().toISOString(),
             downloadURL: doc.data().downloadURL || '',
             path: doc.data().path || '',
-            status: 'active',
-            views: 0,
-            downloads: 0,
-            uploadedBy: 'admin',
-            uploadedByEmail: 'admin@example.com'
-        })) as FileData[];
+            status: doc.data().status || 'active',
+            views: doc.data().views || 0,
+            downloads: doc.data().downloads || 0,
+            uploadedBy: doc.data().uploadedBy || 'unknown',
+            uploadedByEmail: doc.data().uploadedByEmail || 'unknown@example.com'
+        })) as unknown as FileData[];
 
-        console.log('Successfully processed files:', files);
         return files;
     } catch (error) {
         handleError(error, 'Failed to list files');

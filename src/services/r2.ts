@@ -1,5 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client } from '@aws-sdk/client-s3';
 import { cloudflareConfig } from '../config/cloudflare';
 
 // S3 Client oluşturma - Sadece server-side'da çalışacak
@@ -11,12 +10,19 @@ const getS3Client = () => {
     }
 
     if (!s3Client) {
+        const accessKeyId = cloudflareConfig.accessKeyId;
+        const secretAccessKey = cloudflareConfig.secretAccessKey;
+
+        if (!accessKeyId || !secretAccessKey) {
+            throw new Error('Cloudflare credentials are not configured');
+        }
+
         s3Client = new S3Client({
             region: 'auto',
             endpoint: `https://${cloudflareConfig.accountId}.r2.cloudflarestorage.com`,
             credentials: {
-                accessKeyId: cloudflareConfig.accessKeyId,
-                secretAccessKey: cloudflareConfig.secretAccessKey,
+                accessKeyId,
+                secretAccessKey,
             },
         });
     }

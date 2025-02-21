@@ -15,18 +15,18 @@ try {
         throw new Error('FIREBASE_CLIENT_EMAIL is not configured');
     }
 
-    if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-        throw new Error('NEXT_PUBLIC_FIREBASE_PROJECT_ID is not configured');
+    if (!process.env.FIREBASE_PROJECT_ID) {
+        throw new Error('FIREBASE_PROJECT_ID is not configured');
     }
 
     if (getApps().length === 0) {
         adminApp = initializeApp({
             credential: cert({
-                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey: privateKey,
             }),
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
         });
     } else {
         adminApp = getApps()[0];
