@@ -35,8 +35,8 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
 
     const getFileType = (mimeType: string): FileType | null => {
         if (mimeType === 'application/pdf') return 'pdf';
-        if (mimeType.includes('word')) return 'word';
-        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'excel';
+        if (mimeType.includes('word')) return 'doc';
+        if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'xls';
         return null;
     };
 
