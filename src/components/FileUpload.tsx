@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { File as CustomFile, FileType } from '@/types/file';
 import { motion } from 'framer-motion';
 
 interface FileUploadProps {
-    onUpload: (file: CustomFile) => void;
+    onUpload: (file: File) => void;
 }
 
 interface FileFormData {
@@ -33,7 +32,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
 
-    const getFileType = (mimeType: string): FileType | null => {
+    const getFileType = (mimeType: string): string | null => {
         if (mimeType === 'application/pdf') return 'pdf';
         if (mimeType.includes('word')) return 'doc';
         if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'xls';
@@ -112,16 +111,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
 
             const fileUrl = window.URL.createObjectURL(new Blob([formData.file]));
 
-            const customFile: CustomFile = {
-                id: Date.now().toString(),
-                name: formData.title,
-                type: fileType,
-                size: formData.file.size,
-                uploadedBy: 'current-user',
-                uploadedAt: new Date(),
-                url: fileUrl,
-                description: formData.description
-            };
+            const customFile = new File([formData.file], formData.title, { type: formData.file.type });
 
             onUpload(customFile);
             

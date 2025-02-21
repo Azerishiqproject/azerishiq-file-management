@@ -132,15 +132,14 @@ export default function AdminPage() {
                 newPassword: '',
                 confirmPassword: ''
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Password reset error:', error);
-            setError(error.message || 'Şifre güncellenirken bir hata oluştu.');
+            setError(error instanceof Error ? error.message : 'Şifre güncellenirken bir hata oluştu.');
         }
     };
 
     const handleUserStatus = async (uid: string) => {
         try {
-            // Kullanıcıyı bulalım
             const user = users.find(u => u.uid === uid);
             if (!user) {
                 throw new Error('Kullanıcı bulunamadı.');
@@ -161,7 +160,7 @@ export default function AdminPage() {
             ));
 
             setSuccess(`${user.email} kullanıcısı ${newStatus === 'active' ? 'aktif' : 'devre dışı'} durumuna getirildi.`);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('User status update error:', error);
             setError('Kullanıcı durumu güncellenirken bir hata oluştu.');
         }
@@ -256,17 +255,9 @@ export default function AdminPage() {
                 throw new Error('Kullanıcı verileri Firestore\'a kaydedilemedi.');
             }
 
-        } catch (error: any) {
-            console.error('Detailed error:', error);
-            if (error.code === 'auth/email-already-in-use') {
-                setError('Bu e-posta adresi zaten kullanımda.');
-            } else if (error.code === 'auth/weak-password') {
-                setError('Şifre en az 6 karakter olmalıdır.');
-            } else if (error.code === 'permission-denied') {
-                setError('Firestore yazma izni reddedildi. Lütfen yetkilendirmeyi kontrol edin.');
-            } else {
-                setError(`Kullanıcı oluşturulurken bir hata oluştu: ${error.message}`);
-            }
+        } catch (error: unknown) {
+            console.error('Error creating user:', error);
+            setError('Kullanıcı oluşturulurken bir hata oluştu.');
         } finally {
             setIsSubmitting(false);
         }
