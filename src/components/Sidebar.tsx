@@ -31,9 +31,9 @@ export default function Sidebar() {
         <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="w-64 bg-white shadow-sm h-[calc(100vh-4rem)] p-4"
+            className="w-64 bg-white shadow-sm min-h-screen h-full p-4"
         >
-            <nav className="space-y-1">
+            <nav className="space-y-1 ">
                 {menuItems.map((item) => (
                     <motion.button
                         key={item.path}

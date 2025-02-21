@@ -1,74 +1,76 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { File, FileType } from '@/types/file';
+import { FileData, FileType } from '@/types/file';
 import { UserRole } from '@/types/user';
+import { motion } from 'framer-motion';
+import { FiDownload, FiTrash2, FiEye, FiDownloadCloud } from 'react-icons/fi';
 
 interface FileListProps {
-    files: File[];
-    userRole: UserRole;
+    files: FileData[];
+    userRole: string;
+    isLoading?: boolean;
+    onDownload: (downloadURL: string) => void;
+    onDelete?: (id: string, path: string) => void;
 }
 
 type SortOption = 'newest' | 'oldest' | 'largest' | 'smallest' | 'name';
 
-export default function FileList({ files, userRole }: FileListProps) {
+export default function FileList({ files, userRole, isLoading, onDownload, onDelete }: FileListProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedType, setSelectedType] = useState<FileType | 'all'>('all');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
 
-    const handleDownload = (file: File) => {
-        // TODO: Implement file download logic
-        window.open(file.url, '_blank');
-    };
-
-    const handleDelete = async (fileId: string) => {
-        // TODO: Implement file deletion logic
-        console.log('Delete file:', fileId);
-    };
-
     const getFileIcon = (type: string) => {
-        switch (type) {
+        switch (type.toLowerCase()) {
             case 'pdf':
                 return (
                     <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 );
-            case 'word':
+            case 'doc':
+            case 'docx':
                 return (
                     <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 );
-            case 'excel':
+            case 'xls':
+            case 'xlsx':
                 return (
                     <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 );
             default:
-                return null;
+                return (
+                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                );
         }
     };
 
     const filteredAndSortedFiles = useMemo(() => {
         let result = files.filter(file => {
-            // İsim filtresi
-            const nameMatch = file.name.toLowerCase().includes(searchTerm.toLowerCase());
+            // İsim ve başlık filtresi
+            const searchMatch = (file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                               file.title.toLowerCase().includes(searchTerm.toLowerCase()));
             
             // Dosya tipi filtresi
             const typeMatch = selectedType === 'all' || file.type === selectedType;
 
-            return nameMatch && typeMatch;
+            return searchMatch && typeMatch;
         });
 
         // Sıralama
         return result.sort((a, b) => {
             switch (sortBy) {
                 case 'newest':
-                    return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 case 'oldest':
-                    return new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
+                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
                 case 'largest':
                     return b.size - a.size;
                 case 'smallest':
@@ -81,155 +83,121 @@ export default function FileList({ files, userRole }: FileListProps) {
         });
     }, [files, searchTerm, selectedType, sortBy]);
 
+    if (isLoading) {
+        return (
+            <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="animate-pulse space-y-4">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-16 bg-gray-200 rounded-xl" />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (files.length === 0) {
+        return (
+            <div className="bg-white rounded-2xl shadow-sm p-6 text-center">
+                <p className="text-gray-500">Henüz dosya yüklenmemiş.</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="bg-white rounded-lg shadow">
-            {/* Filtreleme ve Sıralama Araçları */}
-            <div className="p-4 border-b border-gray-200 space-y-4">
-                <div className="flex flex-wrap gap-4">
-                    {/* İsim Arama */}
+        <div className="space-y-4">
+            {/* Arama ve filtreleme */}
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+                <div className="flex flex-wrap gap-4 text-black">
                     <div className="flex-1 min-w-[200px]">
-                        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-                            Dosya Adı
-                        </label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                id="search"
-                                className="appearance-none w-full rounded-xl bg-white border border-gray-200 px-4 py-2.5 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-all duration-200"
-                                placeholder="Dosya adı ara..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                        </div>
+                        <input
+                            type="text"
+                            placeholder="Dosya ara..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
                     </div>
-
-                    {/* Dosya Tipi Filtresi */}
-                    <div className="w-48">
-                        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
-                            Dosya Tipi
-                        </label>
-                        <div className="relative">
-                            <select
-                                id="type"
-                                className="appearance-none w-full rounded-xl bg-white border border-gray-200 px-4 py-2.5 pr-8 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-all duration-200"
-                                value={selectedType}
-                                onChange={(e) => setSelectedType(e.target.value as FileType | 'all')}
-                            >
-                                <option value="all">Tüm Dosyalar</option>
-                                <option value="pdf">PDF Dosyaları</option>
-                                <option value="word">Word Dosyaları</option>
-                                <option value="excel">Excel Dosyaları</option>
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sıralama Seçenekleri */}
-                    <div className="w-48">
-                        <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-1">
-                            Sırala
-                        </label>
-                        <div className="relative">
-                            <select
-                                id="sort"
-                                className="appearance-none w-full rounded-xl bg-white border border-gray-200 px-4 py-2.5 pr-8 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-all duration-200"
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            >
-                                <option value="newest">En Yeni Yüklenen</option>
-                                <option value="oldest">En Eski Yüklenen</option>
-                                <option value="largest">En Büyük Boyut</option>
-                                <option value="smallest">En Küçük Boyut</option>
-                                <option value="name">A'dan Z'ye</option>
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+                    <select
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value as FileType | 'all')}
+                        className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                        <option value="all">Tüm Dosyalar</option>
+                        <option value="pdf">PDF</option>
+                        <option value="word">Word</option>
+                        <option value="excel">Excel</option>
+                        <option value="other">Diğer</option>
+                    </select>
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                        className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                        <option value="newest">En Yeni</option>
+                        <option value="oldest">En Eski</option>
+                        <option value="largest">En Büyük</option>
+                        <option value="smallest">En Küçük</option>
+                        <option value="name">İsme Göre</option>
+                    </select>
                 </div>
             </div>
 
-            {/* Dosya Listesi */}
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Dosya
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tip
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Boyut
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Yüklenme Tarihi
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                İşlemler
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredAndSortedFiles.map((file) => (
-                            <tr key={file.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        {getFileIcon(file.type)}
-                                        <div className="ml-4">
-                                            <div className="text-sm font-medium text-gray-900">{file.name}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className="text-sm text-gray-500">{file.type.toUpperCase()}</span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className="text-sm text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {new Date(file.uploadedAt).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button
-                                        onClick={() => handleDownload(file)}
-                                        className="text-indigo-600 hover:text-indigo-900 mr-4 transition-colors duration-150"
-                                    >
-                                        İndir
-                                    </button>
-                                    {userRole === 'admin' && (
-                                        <button
-                                            onClick={() => handleDelete(file.id)}
-                                            className="text-red-600 hover:text-red-900 transition-colors duration-150"
-                                        >
-                                            Sil
-                                        </button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                        {filteredAndSortedFiles.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                                    Dosya bulunamadı
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+            {/* Dosya listesi */}
+            <div className="bg-white rounded-2xl shadow-sm divide-y">
+                {filteredAndSortedFiles.map((file, index) => (
+                    <motion.div
+                        key={file.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="p-4 flex items-center justify-between hover:bg-gray-50"
+                    >
+                        <div className="flex items-center space-x-4">
+                            {getFileIcon(file.type)}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                    {file.title || file.name}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    {new Date(file.createdAt).toLocaleDateString('tr-TR')} • {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                                {file.description && (
+                                    <p className="text-sm text-gray-500 mt-1 truncate">
+                                        {file.description}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2 ml-4">
+                            <div className="flex items-center space-x-1 text-gray-500 text-sm">
+                                <FiEye className="w-4 h-4" />
+                                <span>{file.views}</span>
+                            </div>
+                            <div className="flex items-center space-x-1 text-gray-500 text-sm">
+                                <FiDownloadCloud className="w-4 h-4" />
+                                <span>{file.downloads}</span>
+                            </div>
+                            <button
+                                onClick={() => onDownload(file.downloadURL)}
+                                className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                                title="İndir"
+                            >
+                                <FiDownload className="w-5 h-5" />
+                            </button>
+                            
+                            {userRole === 'admin' && onDelete && (
+                                <button
+                                    onClick={() => onDelete(file.id, file.path)}
+                                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                                    title="Sil"
+                                >
+                                    <FiTrash2 className="w-5 h-5" />
+                                </button>
+                            )}
+                        </div>
+                    </motion.div>
+                ))}
             </div>
         </div>
     );

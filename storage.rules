@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Admin kontrolü için yardımcı fonksiyon
+    function isAdmin() {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Kullanıcı girişi kontrolü için yardımcı fonksiyon
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Docs klasörü kuralları
+    match /docs/{fileName} {
+      // Herkes okuyabilir (indirme URL'i için)
+      allow read: if isAuthenticated();
+      
+      // Sadece adminler yazabilir ve silebilir
+      allow write, delete: if isAdmin();
+      
+      // Admin SDK ile yapılan isteklere her zaman izin ver
+      allow read, write: if request.resource.token != null;
+    }
+
+    match /{allPaths=**} {
+      // Admin tüm işlemleri yapabilir
+      allow read, write: if isAdmin();
+      
+      // Giriş yapmış kullanıcılar okuyabilir
+      allow read: if isAuthenticated();
+    }
+  }
+} 

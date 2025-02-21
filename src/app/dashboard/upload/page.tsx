@@ -6,18 +6,87 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import { uploadFile, uploadMultipleFiles } from '@/services/storage';
+import { toast } from 'react-hot-toast';
 
 export default function UploadPage() {
     const { userData, authStatus } = useAuth();
     const { handleProtectedNavigation } = useNavigation();
-    const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         handleProtectedNavigation('/dashboard/upload');
     }, [handleProtectedNavigation]);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setSelectedFile(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handleSingleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setSelectedFile(file); // Set the selected file without uploading immediately
+    };
+
+    const handleMultipleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target?.files || []);
+        if (files.length === 0) return;
+
+        // Maksimum 50 dosya kontrolü
+        if (files.length > 50) {
+            toast.error('En fazla 50 dosya seçebilirsiniz');
+            return;
+        }
+
+        try {
+            setIsUploading(true);
+            await uploadMultipleFiles(files);
+            toast.success('Dosyalar başarıyla yüklendi');
+            event.target.value = '';
+        } catch (error) {
+            console.error('Bulk upload error:', error);
+            toast.error('Dosyalar yüklenirken bir hata oluştu');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleUploadButtonClick = async () => {
+        if (selectedFile) {
+            try {
+                setIsUploading(true);
+                await uploadFile(selectedFile, description);
+                toast.success('Dosya başarıyla yüklendi');
+                // Form'u temizle
+                setDescription('');
+                setSelectedFile(null);
+            } catch (error) {
+                console.error('Upload error:', error);
+                toast.error('Dosya yüklenirken bir hata oluştu');
+            } finally {
+                setIsUploading(false);
+            }
+        }
+    };
 
     // Loading durumunda spinner göster
     if (authStatus === 'loading' || !userData) {
@@ -51,37 +120,6 @@ export default function UploadPage() {
         );
     }
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-        
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            setSelectedFile(e.dataTransfer.files[0]);
-        }
-    };
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setSelectedFile(e.target.files[0]);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        // TODO: Implement file upload logic
-        console.log('Uploading:', { title, description, file: selectedFile });
-    };
-
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar user={{
@@ -101,104 +139,86 @@ export default function UploadPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2">
+                                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2 text-black">
                                     Dosya Yükleme
                                 </h1>
-                                <p className="text-gray-600">
+                                <p className="text-gray-600 mb-6">
                                     Sisteme yeni dosyalar yükleyebilirsiniz.
                                 </p>
-                            </motion.div>
-                        </div>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            className="bg-white rounded-2xl shadow-sm p-6"
-                        >
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-4">
-                                    {/* Başlık alanı */}
-                                    <div>
-                                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Başlık
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="title"
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                            placeholder="Dosya başlığını girin"
-                                            required
-                                        />
+                                <div className="space-y-6">
+                                    {/* Tekli dosya yükleme */}
+                                    <div className="bg-gray-50 p-6 rounded-xl">
+                                        <h2 className="text-lg font-semibold mb-4 text-black">Tekli Dosya Yükleme</h2>
+                                        <div className="space-y-4">
+                                            <div className="flex gap-4">
+                                                <input
+                                                    type="file"
+                                                    onChange={handleSingleFileUpload}
+                                                    disabled={isUploading}
+                                                    className="block w-full text-sm text-gray-500
+                                                        file:mr-4 file:py-2 file:px-4
+                                                        file:rounded-full file:border-0
+                                                        file:text-sm file:font-semibold
+                                                        file:bg-indigo-50 file:text-indigo-700
+                                                        hover:file:bg-indigo-100"
+                                                />
+                                            </div>
+                                            <textarea
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}
+                                                placeholder="Açıklama (isteğe bağlı)"
+                                                className="w-full p-2 border rounded"
+                                            />
+                                        </div>
                                     </div>
 
-                                    {/* Açıklama alanı */}
-                                    <div>
-                                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Açıklama
-                                        </label>
-                                        <textarea
-                                            id="description"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                            placeholder="Dosya açıklamasını girin"
-                                            rows={4}
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Dosya yükleme alanı */}
-                                    <div
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                        className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
-                                            isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'
-                                        }`}
-                                    >
-                                        <div className="space-y-2">
-                                            {selectedFile ? (
-                                                <div className="text-sm text-gray-600">
-                                                    <span className="font-medium">{selectedFile.name}</span>
-                                                    <br />
-                                                    <span>({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</span>
-                                                </div>
-                                            ) : (
-                                                <div className="text-gray-600">
-                                                    Dosyaları sürükleyip bırakın veya seçin
-                                                </div>
-                                            )}
+                                    {/* Toplu dosya yükleme */}
+                                    <div className="bg-gray-50 p-6 rounded-xl">
+                                        <h2 className="text-lg font-semibold mb-4 text-black">Toplu Dosya Yükleme</h2>
+                                        <div
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
+                                            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                                                isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'
+                                            }`}
+                                        >
                                             <input
                                                 type="file"
-                                                id="file"
-                                                onChange={handleFileSelect}
-                                                className="hidden"
-                                                required
+                                                multiple
+                                                max="50"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.epub,.txt,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.ico,.webp" 
+                                                onChange={handleMultipleFileUpload}
+                                                disabled={isUploading}
+                                                className="block w-full text-sm text-gray-500
+                                                    file:mr-4 file:py-2 file:px-4
+                                                    file:rounded-full file:border-0
+                                                    file:text-sm file:font-semibold
+                                                    file:bg-indigo-50 file:text-indigo-700
+                                                    hover:file:bg-indigo-100"
                                             />
-                                            <label
-                                                htmlFor="file"
-                                                className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
-                                            >
-                                                Dosya Seç
-                                            </label>
+                                            <p className="text-sm text-gray-500 mt-2">
+                                                En fazla 50 dosya seçebilirsiniz
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Gönder butonu */}
-                                <div className="flex justify-end">
+                                {/* Yükle butonu */}
+                                <div className="flex justify-end mt-4">
                                     <button
-                                        type="submit"
-                                        className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                                        onClick={handleUploadButtonClick}
+                                        disabled={isUploading || !selectedFile}
+                                        className={`px-6 py-2 bg-indigo-600 text-white rounded-lg transition-colors ${
+                                            isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'
+                                        }`}
                                     >
                                         Yükle
                                     </button>
                                 </div>
-                            </form>
-                        </motion.div>
+                            </motion.div>
+                        </div>
                     </div>
                 </main>
             </div>

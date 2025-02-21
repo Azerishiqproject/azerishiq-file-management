@@ -1,52 +1,128 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import Sidebar from '@/components/Sidebar';
 import FileList from '@/components/FileList';
 import Navbar from '@/components/Navbar';
-import { File } from '@/types/file';
-
-// Örnek dosyalar
-const sampleFiles: File[] = [
-    {
-        id: '1',
-        name: 'Rapor-2024.pdf',
-        type: 'pdf',
-        size: 2500000, // 2.5 MB
-        uploadedBy: 'admin',
-        uploadedAt: new Date('2024-02-15'),
-        url: '#'
-    },
-    {
-        id: '2',
-        name: 'Sunum.docx',
-        type: 'word',
-        size: 1800000, // 1.8 MB
-        uploadedBy: 'admin',
-        uploadedAt: new Date('2024-02-16'),
-        url: '#'
-    },
-    {
-        id: '3',
-        name: 'Veriler.xlsx',
-        type: 'excel',
-        size: 950000, // 0.95 MB
-        uploadedBy: 'admin',
-        uploadedAt: new Date('2024-02-17'),
-        url: '#'
-    }
-];
+import { listFiles, deleteFile } from '@/services/storage';
+import { toast } from 'react-hot-toast';
+import { FileData } from '@/types/file';
+import { getDocs, collection } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 
 export default function DashboardPage() {
     const { userData, authStatus } = useAuth();
     const { handleProtectedNavigation } = useNavigation();
+    const [files, setFiles] = useState<FileData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         handleProtectedNavigation('/dashboard');
-    }, [authStatus, handleProtectedNavigation]);
+        if (userData && userData.email) {
+            fetchFiles();
+        }
+    }, [handleProtectedNavigation, userData]);
+
+    const fetchFiles = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            console.log('Fetching files...');
+            
+            // Auth kontrolü
+            if (!userData || !userData.email) {
+                console.log('No user data available, waiting for auth...');
+                return;
+            }
+
+            // Firestore'dan dokümanları getir
+            const querySnapshot = await getDocs(collection(db, 'docs'));
+            console.log(`Found ${querySnapshot.size} documents`);
+
+            // Dokümanları dönüştür
+            const filesList = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                console.log('Processing document:', doc.id, data);
+                return {
+                    id: doc.id,
+                    name: data.name || '',
+                    title: data.name || '',
+                    description: data.description || 'no explanation',
+                    size: data.size || 0,
+                    type: 'pdf',
+                    uploadedAt: new Date().toISOString(),
+                    downloadURL: data.downloadURL || '',
+                    path: data.path || '',
+                    status: 'active',
+                    views: 0,
+                    downloads: 0,
+                    uploadedBy: userData.email,
+                    uploadedByEmail: userData.email
+                } as FileData;
+            });
+
+            console.log('Files processed:', filesList);
+            setFiles(filesList);
+        } catch (error) {
+            console.error('Error fetching files:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Dosyalar yüklenirken bir hata oluştu';
+            console.error('Detailed error:', error);
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDownload = async (downloadURL: string) => {
+        try {
+            console.log('Download URL:', downloadURL);
+            if (!downloadURL) {
+                throw new Error('İndirme bağlantısı bulunamadı');
+            }
+
+            // Fetch API ile dosyayı indir
+            const response = await fetch(downloadURL);
+            if (!response.ok) {
+                throw new Error('Dosya indirilemedi');
+            }
+
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', ''); // Dosya indirme işlemi için
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success('Dosya indiriliyor...');
+        } catch (error) {
+            console.error('Download error:', error);
+            toast.error('Dosya indirilirken bir hata oluştu');
+        }
+    };
+
+    const handleDelete = async (id: string, path: string) => {
+        if (!confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            await deleteFile(id, path);
+            toast.success('Dosya başarıyla silindi');
+            // Dosya listesini güncelle
+            await fetchFiles();
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            toast.error('Dosya silinirken bir hata oluştu');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Loading durumunda spinner göster
     if (authStatus === 'loading' || !userData) {
@@ -105,11 +181,21 @@ export default function DashboardPage() {
                                 <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2">
                                     {userData.role === 'admin' ? 'Tüm Dosyalar' : 'Dosyalar'}
                                 </h1>
-                                <p className="text-gray-600">
+                                <p className="text-gray-600 mb-4">
                                     {userData.role === 'admin' 
                                         ? 'Sistemdeki tüm dosyaları buradan yönetebilirsiniz.'
                                         : 'Size atanan dosyaları buradan görüntüleyebilirsiniz.'}
                                 </p>
+
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm"
+                                    >
+                                        {error}
+                                    </motion.div>
+                                )}
                             </motion.div>
                         </div>
                         
@@ -118,7 +204,13 @@ export default function DashboardPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.3 }}
                         >
-                            <FileList files={sampleFiles} userRole={userData.role} />
+                            <FileList 
+                                files={files} 
+                                userRole={userData.role}
+                                onDownload={handleDownload}
+                                onDelete={userData.role === 'admin' ? handleDelete : undefined}
+                                isLoading={isLoading}
+                            />
                         </motion.div>
                     </div>
                 </motion.main>

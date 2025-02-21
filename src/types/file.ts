@@ -1,12 +1,18 @@
-export type FileType = 'pdf' | 'word' | 'excel';
-
-export interface File {
+export interface FileData {
     id: string;
     name: string;
-    type: FileType;
+    title: string;
+    description: string;
     size: number;
+    type: string;
+    uploadedAt: string;
+    downloadURL: string;
+    path: string;
+    status: 'active' | 'deleted';
+    views: number;
+    downloads: number;
     uploadedBy: string;
-    uploadedAt: Date;
-    url: string;
-    description?: string;
-} 
+    uploadedByEmail: string;
+}
+
+export type FileType = 'pdf' | 'doc' | 'docx' | 'xls' | 'xlsx' | 'other'; 
