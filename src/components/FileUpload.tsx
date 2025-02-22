@@ -67,7 +67,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, []);
+    }, [validateFile]);
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -88,7 +88,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, []);
+    }, [validateFile]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -128,6 +128,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
                 downloads: 0,
                 uploadedByEmail: 'current-user@example.com',
                 url: fileUrl,
+                createdAt: new Date().toISOString(),
             };
 
             onUpload(customFile);
@@ -140,6 +141,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(null);
         } catch (err) {
             setError('Dosya yükleme sırasında bir hata oluştu.');
+            console.error(err);
         } finally {
             setIsLoading(false);
         }

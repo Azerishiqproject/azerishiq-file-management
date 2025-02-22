@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import Sidebar from '@/components/Sidebar';
 import FileList from '@/components/FileList';
 import Navbar from '@/components/Navbar';
-import { listFiles, deleteFile } from '@/services/storage';
+import { deleteFile } from '@/services/storage';
 import { toast } from 'react-hot-toast';
 import { FileData } from '@/types/file';
 import { getDocs, collection } from 'firebase/firestore';
@@ -20,14 +20,7 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        handleProtectedNavigation('/dashboard');
-        if (userData && userData.email) {
-            fetchFiles();
-        }
-    }, [handleProtectedNavigation, userData]);
-
-    const fetchFiles = async () => {
+    const fetchFiles = useCallback(async () => {
         try {
             setIsLoading(true);
             setError(null);
@@ -76,7 +69,14 @@ export default function DashboardPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [userData]);
+
+    useEffect(() => {
+        handleProtectedNavigation('/dashboard');
+        if (userData && userData.email) {
+            fetchFiles();
+        }
+    }, [handleProtectedNavigation, userData, fetchFiles]);
 
     const handleDownload = async (downloadURL: string) => {
         try {

@@ -14,6 +14,7 @@ export interface FileData {
     uploadedBy: string;
     uploadedByEmail: string;
     url: string;
+    createdAt: string;
 }
 
 export type FileType = 'pdf' | 'doc' | 'docx' | 'xls' | 'xlsx' | 'other' | 'word' | 'excel'; 

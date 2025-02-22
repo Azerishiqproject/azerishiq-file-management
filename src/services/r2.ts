@@ -5,25 +5,6 @@ import { cloudflareConfig } from '../config/cloudflare';
 // S3 Client oluşturma - Sadece server-side'da çalışacak
 let s3Client: S3Client | null = null;
 
-const getS3Client = () => {
-    if (typeof window !== 'undefined') {
-        throw new Error('S3 client can only be used on the server side');
-    }
-
-    if (!s3Client) {
-        s3Client = new S3Client({
-            region: 'auto',
-            endpoint: `https://${cloudflareConfig.accountId}.r2.cloudflarestorage.com`,
-            credentials: {
-                accessKeyId: cloudflareConfig.accessKeyId,
-                secretAccessKey: cloudflareConfig.secretAccessKey,
-            },
-        });
-    }
-
-    return s3Client;
-};
-
 // API endpoint'leri
 const API_ENDPOINTS = {
     UPLOAD: '/api/files/upload',
@@ -60,14 +41,15 @@ export const listFiles = async () => {
     }
 
     const files = await response.json();
-    return files.map((file: any) => ({
+    return files.map((file: { key: string; name: string; size: number; uploadedAt: string; }) => ({
         id: file.key,
         name: file.name,
         type: getFileType(file.name.split('.').pop() || ''),
         size: file.size,
         uploadedAt: new Date(file.uploadedAt),
         uploadedBy: 'admin',
-        url: file.url
+        uploadedByEmail: 'current-user@example.com',
+        url: '',
     }));
 };
 

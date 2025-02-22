@@ -118,8 +118,8 @@ export const uploadMultipleFiles = async (files: File[]) => {
     }
 };
 
-// Dosya indirme URL'i alma
-export const getDownloadUrl = async (id: string, path: string) => {
+// İndirme URL'i alma
+export const getDownloadUrl = async (id: string) => {
     try {
         const response = await fetch(`${API_ENDPOINTS.DOWNLOAD}?id=${encodeURIComponent(id)}`);
         
@@ -136,7 +136,7 @@ export const getDownloadUrl = async (id: string, path: string) => {
 };
 
 // Dosya silme
-export const deleteFile = async (id: string, path: string) => {
+export const deleteFile = async (id: string) => {
     const loadingToast = toast.loading('Dosya siliniyor...');
     try {
         // Önce Firestore'dan dokümanı sil
@@ -149,7 +149,7 @@ export const deleteFile = async (id: string, path: string) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ path })
+            body: JSON.stringify({ id })
         });
 
         if (!response.ok) {

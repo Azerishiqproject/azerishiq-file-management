@@ -158,19 +158,19 @@ export async function POST(request: Request) {
                 uploadedByEmail: 'anonymous'
             });
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Firebase operation error:', error);
             console.error('Error details:', {
-                code: error?.code,
-                message: error?.message,
-                stack: error?.stack
+                code: (error as any)?.code,
+                message: (error as any)?.message,
+                stack: (error as any)?.stack
             });
 
             return NextResponse.json({ 
                 error: 'Storage operation failed',
-                details: error?.message || 'Failed to upload file to storage',
-                code: error?.code,
-                stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+                details: (error as any)?.message || 'Failed to upload file to storage',
+                code: (error as any)?.code,
+                stack: process.env.NODE_ENV === 'development' ? (error as any)?.stack : undefined
             }, { status: 500 });
         }
 

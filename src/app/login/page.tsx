@@ -53,8 +53,8 @@ export default function LoginPage() {
         try {
             await login(email, password);
             router.replace('/dashboard');
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Giriş yapılırken bir hata oluştu.');
         } finally {
             setIsSubmitting(false);
         }

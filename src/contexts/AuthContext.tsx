@@ -10,9 +10,10 @@ import {
     setPersistence,
     browserLocalPersistence
 } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -38,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
-    const pathname = usePathname();
     const router = useRouter();
 
     // Firebase persistence ayarı ve token yenileme
@@ -178,31 +178,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } else {
                 throw new Error('Kullanıcı verileri alınamadı.');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             setAuthStatus('unauthenticated');
             Cookies.remove('__session');
             
-            // Firebase hata kodlarını kontrol et
-            switch (error.code) {
-                case 'auth/invalid-credential':
-                case 'auth/wrong-password':
-                case 'auth/user-not-found':
-                    throw new Error('E-posta veya şifre hatalı.');
-                case 'auth/invalid-email':
-                    throw new Error('Geçersiz e-posta adresi.');
-                case 'auth/user-disabled':
-                    throw new Error('Bu hesap devre dışı bırakılmış.');
-                case 'auth/too-many-requests':
-                    throw new Error('Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.');
-                case 'auth/network-request-failed':
-                    throw new Error('Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.');
-                default:
-                    if (error.message) {
-                        throw error;
-                    }
-                    console.error("Login error:", error);
-                    throw new Error('Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+            if (error instanceof FirebaseError) {
+                // Firebase hata kodlarını kontrol et
+                switch (error.code) {
+                    case 'auth/invalid-credential':
+                    case 'auth/wrong-password':
+                    case 'auth/user-not-found':
+                        throw new Error('E-posta veya şifre hatalı.');
+                    case 'auth/invalid-email':
+                        throw new Error('Geçersiz e-posta adresi.');
+                    case 'auth/user-disabled':
+                        throw new Error('Bu hesap devre dışı bırakılmış.');
+                    case 'auth/too-many-requests':
+                        throw new Error('Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.');
+                    case 'auth/network-request-failed':
+                        throw new Error('Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.');
+                    default:
+                        if (error.message) {
+                            throw error;
+                        }
+                        console.error("Login error:", error);
+                        throw new Error('Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+                }
             }
+            throw new Error('Giriş yapılırken bir hata oluştu.');
         }
     };
 
@@ -213,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUserData(null);
             setAuthStatus('unauthenticated');
             Cookies.remove('__session');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Logout error:", error);
             throw new Error('Çıkış yapılırken bir hata oluştu.');
         }
