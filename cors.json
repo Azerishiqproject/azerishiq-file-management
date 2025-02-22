@@ -1,8 +1,16 @@
 [
   {
-    "origin": ["http://localhost:3000", "https://azerishiq-file-management.vercel.app"],
+    "origin": [
+      "http://localhost:3000",
+      "https://azerishiq-file-management.vercel.app"
+    ],
     "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
     "maxAgeSeconds": 3600,
-    "responseHeader": ["Content-Type", "Content-Length", "Content-Disposition"]
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Content-Disposition",
+      "Access-Control-Allow-Origin"
+    ]
   }
-] 
+]
