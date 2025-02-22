@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { FirebaseError } from 'firebase-admin';
 
 // Firebase Admin SDK yapılandırması
 let app;
@@ -161,16 +162,14 @@ export async function POST(request: Request) {
         } catch (error: unknown) {
             console.error('Firebase operation error:', error);
             console.error('Error details:', {
-                code: (error as any)?.code,
-                message: (error as any)?.message,
-                stack: (error as any)?.stack
+                message: error instanceof Error ? error.message : 'Unknown error',
+                stack: error instanceof Error ? error.stack : undefined
             });
 
             return NextResponse.json({ 
                 error: 'Storage operation failed',
-                details: (error as any)?.message || 'Failed to upload file to storage',
-                code: (error as any)?.code,
-                stack: process.env.NODE_ENV === 'development' ? (error as any)?.stack : undefined
+                details: error instanceof Error ? error.message : 'Failed to upload file to storage',
+                stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
             }, { status: 500 });
         }
 

@@ -52,7 +52,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
     };
 
     const filteredAndSortedFiles = useMemo(() => {
-        let result = files.filter(file => {
+        const result = files.filter(file => {
             // İsim ve başlık filtresi
             const searchMatch = (file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                file.title.toLowerCase().includes(searchTerm.toLowerCase()));

@@ -33,14 +33,14 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
 
-    const getFileType = (mimeType: string): FileType | null => {
+    const getFileType = useCallback((mimeType: string): FileType | null => {
         if (mimeType === 'application/pdf') return 'pdf';
         if (mimeType.includes('word')) return 'word';
         if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'excel';
         return null;
-    };
+    }, []);
 
-    const validateFile = (file: File): boolean => {
+    const validateFile = useCallback((file: File): boolean => {
         if (!allowedTypes.includes(file.type)) {
             setError('Sadece PDF, Word ve Excel dosyaları yüklenebilir.');
             return false;
@@ -53,7 +53,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
         }
 
         return true;
-    };
+    }, [allowedTypes, getFileType]);
 
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -67,7 +67,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, [validateFile]);
+    }, [validateFile, setFormData]);
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -88,7 +88,7 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
             setSelectedFile(file);
             setFormData(prev => ({ ...prev, file }));
         }
-    }, [validateFile]);
+    }, [validateFile, setFormData]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

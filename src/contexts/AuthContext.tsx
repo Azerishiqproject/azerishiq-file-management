@@ -6,7 +6,6 @@ import {
     signInWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    getAuth,
     setPersistence,
     browserLocalPersistence
 } from 'firebase/auth';
@@ -73,29 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return () => clearInterval(tokenRefreshInterval);
     }, []);
-
-    // Firestore'dan kullanıcı verilerini al
-    const getUserData = async (user: User) => {
-        try {
-            const userRef = doc(db, 'users', user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (userSnap.exists()) {
-                return userSnap.data() as UserData;
-            } else {
-                const newUserData: UserData = {
-                    uid: user.uid,
-                    email: user.email,
-                    role: 'user'
-                };
-                await setDoc(userRef, newUserData);
-                return newUserData;
-            }
-        } catch (error) {
-            console.error('Error fetching user data:', error);
-            return null;
-        }
-    };
 
     // Auth state değişikliklerini izle
     useEffect(() => {

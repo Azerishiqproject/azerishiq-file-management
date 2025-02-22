@@ -1,7 +1,7 @@
 import { FileData } from '@/types/file';
 import { toast } from 'react-hot-toast';
 import { db } from '@/config/firebase';
-import { collection, getDocs, query, where, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 
 // API endpoint'leri
@@ -135,33 +135,59 @@ export const getDownloadUrl = async (id: string) => {
     }
 };
 
+// Function to check for related documents
+const checkRelatedDocuments = async (id: string) => {
+    try {
+        // Önce dökümanı kontrol et
+        const docRef = doc(db, 'docs', id);
+        const docSnap = await getDoc(docRef);
+        
+        if (!docSnap.exists()) {
+            throw new Error('Dosya bulunamadı');
+        }
+
+        const fileData = docSnap.data();
+        return { exists: true, path: fileData.path };
+    } catch (error) {
+        console.error('Dosya kontrol hatası:', error);
+        return { exists: false, path: null };
+    }
+};
+
 // Dosya silme
 export const deleteFile = async (id: string) => {
     const loadingToast = toast.loading('Dosya siliniyor...');
     try {
-        // Önce Firestore'dan dokümanı sil
-        const docRef = doc(db, 'docs', id);
-        await deleteDoc(docRef);
-
-        // Storage'dan silme işlemi için API endpoint'i kullan
-        const response = await fetch(API_ENDPOINTS.DELETE, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id })
-        });
-
-        if (!response.ok) {
-            throw new Error('Dosya silinirken bir hata oluştu');
+        // Check for related documents
+        const { exists, path } = await checkRelatedDocuments(id);
+        
+        if (!exists) {
+            throw new Error('Dosya bulunamadı');
         }
+
+        // Delete from Firebase Storage
+        if (path) {
+            const storageRef = ref(storage, path);
+            try {
+                await deleteObject(storageRef);
+            } catch (storageError) {
+                console.error('Storage deletion error:', storageError);
+                // Continue with Firestore deletion even if Storage deletion fails
+            }
+        }
+
+        // Delete document from Firestore
+        await deleteDoc(doc(db, 'docs', id));
 
         toast.success('Dosya başarıyla silindi', {
             id: loadingToast
         });
         return { success: true };
     } catch (error) {
-        handleError(error, 'Failed to delete file');
+        const errorMessage = error instanceof Error ? error.message : 'Dosya silinirken bir hata oluştu';
+        toast.error(errorMessage, {
+            id: loadingToast
+        });
         throw error;
     }
 }; 

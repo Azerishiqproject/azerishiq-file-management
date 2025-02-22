@@ -1,9 +1,8 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client } from '@aws-sdk/client-s3';
 import { cloudflareConfig } from '../config/cloudflare';
 
 // S3 Client oluşturma - Sadece server-side'da çalışacak
-let s3Client: S3Client | null = null;
+const s3Client: S3Client | null = null;
 
 // API endpoint'leri
 const API_ENDPOINTS = {
