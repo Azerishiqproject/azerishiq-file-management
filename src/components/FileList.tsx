@@ -10,7 +10,7 @@ interface FileListProps {
     userRole: string;
     isLoading?: boolean;
     onDownload: (downloadURL: string) => void;
-    onDelete?: (id: string, path: string) => void;
+    onDelete?: (id: string) => void;
 }
 
 type SortOption = 'newest' | 'oldest' | 'largest' | 'smallest' | 'name';
@@ -187,7 +187,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                             
                             {userRole === 'admin' && onDelete && (
                                 <button
-                                    onClick={() => onDelete(file.id, file.path)}
+                                    onClick={() => onDelete(file.id)}
                                     className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                                     title="Sil"
                                 >

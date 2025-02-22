@@ -105,20 +105,15 @@ export default function DashboardPage() {
         }
     };
 
-    const handleDelete = async (id: string, path: string) => {
+    const handleDelete = async (id: string) => {
         if (!confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
             return;
         }
 
         try {
             setIsLoading(true);
-            // Delete from Firebase Storage and Firestore
             await deleteFile(id);
-            
-            // Başarılı mesajı göster
             toast.success('Dosya başarıyla silindi');
-            
-            // Dosya listesini güncelle
             await fetchFiles();
         } catch (error) {
             console.error('Error deleting file:', error);

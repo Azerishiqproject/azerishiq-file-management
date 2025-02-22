@@ -135,25 +135,6 @@ export const getDownloadUrl = async (id: string) => {
     }
 };
 
-// Function to check for related documents
-const checkRelatedDocuments = async (id: string) => {
-    try {
-        // Önce dökümanı kontrol et
-        const docRef = doc(db, 'docs', id);
-        const docSnap = await getDoc(docRef);
-        
-        if (!docSnap.exists()) {
-            throw new Error('Dosya bulunamadı');
-        }
-
-        const fileData = docSnap.data();
-        return { exists: true, path: fileData.path };
-    } catch (error) {
-        console.error('Dosya kontrol hatası:', error);
-        return { exists: false, path: null };
-    }
-};
-
 // Dosya silme
 export const deleteFile = async (id: string) => {
     try {
