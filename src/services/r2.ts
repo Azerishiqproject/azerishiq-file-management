@@ -1,8 +1,7 @@
-import { S3Client } from '@aws-sdk/client-s3';
-import { cloudflareConfig } from '../config/cloudflare';
+// import { cloudflareConfig } from '../config/cloudflare'; // Unused import removed
 
 // S3 Client oluşturma - Sadece server-side'da çalışacak
-const s3Client: S3Client | null = null;
+// const s3Client: S3Client | null = null; // Unused variable removed
 
 // API endpoint'leri
 const API_ENDPOINTS = {

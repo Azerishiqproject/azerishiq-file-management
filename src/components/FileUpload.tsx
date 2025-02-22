@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { FileData as CustomFile, FileType } from '@/types/file';
 import { motion } from 'framer-motion';
 
@@ -25,13 +25,13 @@ export default function FileUpload({ onUpload }: FileUploadProps) {
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    const allowedTypes = [
+    const allowedTypes = useMemo(() => [
         'application/pdf',
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ];
+    ], []);
 
     const getFileType = useCallback((mimeType: string): FileType | null => {
         if (mimeType === 'application/pdf') return 'pdf';

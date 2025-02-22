@@ -10,7 +10,7 @@ import {
     browserLocalPersistence
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';

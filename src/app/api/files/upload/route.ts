@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
-import { FirebaseError } from 'firebase-admin';
 
 // Firebase Admin SDK yapılandırması
 let app;
