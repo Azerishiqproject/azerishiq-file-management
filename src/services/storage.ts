@@ -156,18 +156,21 @@ const checkRelatedDocuments = async (id: string) => {
 
 // Dosya silme
 export const deleteFile = async (id: string) => {
-    const loadingToast = toast.loading('Dosya siliniyor...');
     try {
-        // Check for related documents
-        const { exists, path } = await checkRelatedDocuments(id);
+        // Get the document first to get the path
+        const docRef = doc(db, 'docs', id);
+        const docSnap = await getDoc(docRef);
         
-        if (!exists) {
+        if (!docSnap.exists()) {
             throw new Error('Dosya bulunamadı');
         }
 
-        // Delete from Firebase Storage
-        if (path) {
-            const storageRef = ref(storage, path);
+        const fileData = docSnap.data();
+        const filePath = fileData.path;
+
+        // Delete from Storage if path exists
+        if (filePath) {
+            const storageRef = ref(storage, filePath);
             try {
                 await deleteObject(storageRef);
             } catch (storageError) {
@@ -176,18 +179,12 @@ export const deleteFile = async (id: string) => {
             }
         }
 
-        // Delete document from Firestore
-        await deleteDoc(doc(db, 'docs', id));
-
-        toast.success('Dosya başarıyla silindi', {
-            id: loadingToast
-        });
+        // Delete from Firestore
+        await deleteDoc(docRef);
+        
         return { success: true };
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Dosya silinirken bir hata oluştu';
-        toast.error(errorMessage, {
-            id: loadingToast
-        });
+        handleError(error, 'Failed to delete file');
         throw error;
     }
 }; 

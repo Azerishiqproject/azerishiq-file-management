@@ -112,8 +112,12 @@ export default function DashboardPage() {
 
         try {
             setIsLoading(true);
+            // Delete from Firebase Storage and Firestore
             await deleteFile(id);
+            
+            // Başarılı mesajı göster
             toast.success('Dosya başarıyla silindi');
+            
             // Dosya listesini güncelle
             await fetchFiles();
         } catch (error) {
