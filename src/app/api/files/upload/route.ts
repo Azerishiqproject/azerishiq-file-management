@@ -174,7 +174,7 @@ export async function POST(request: Request) {
             }, { status: 500 });
         }
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Request processing error:', error);
         return NextResponse.json({ 
             error: 'Request failed',
