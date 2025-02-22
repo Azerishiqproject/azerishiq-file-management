@@ -112,7 +112,7 @@ export default function DashboardPage() {
 
         try {
             setIsLoading(true);
-            await deleteFile(id, path);
+            await deleteFile(id);
             toast.success('Dosya başarıyla silindi');
             // Dosya listesini güncelle
             await fetchFiles();
