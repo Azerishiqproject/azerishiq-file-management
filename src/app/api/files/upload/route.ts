@@ -39,6 +39,18 @@ export async function POST(request: Request) {
     try {
         console.log('Starting file upload process...');
 
+        // CORS headers ekle
+        const headers = new Headers({
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        });
+
+        // OPTIONS request için response
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { headers });
+        }
+
         // Form verilerini al
         const formData = await request.formData();
         const fileEntry = formData.get('file');

@@ -46,14 +46,15 @@ service cloud.firestore {
     // Files collection rules
     match /files/{fileId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAdmin() && isValidFileData(request.resource.data);
+      allow create, update: if isAuthenticated() && isValidFileData(request.resource.data);
       allow delete: if isAdmin();
     }
 
     // Docs collection rules
     match /docs/{docId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAdmin() && isValidDocData(request.resource.data);
+      allow create: if isAuthenticated() && isValidDocData(request.resource.data);
+      allow update: if isAdmin() && isValidDocData(request.resource.data);
       allow delete: if isAdmin();
     }
 

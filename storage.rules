@@ -18,19 +18,22 @@ service firebase.storage {
       // Herkes okuyabilir (indirme URL'i için)
       allow read: if isAuthenticated();
       
-      // Sadece adminler yazabilir ve silebilir
-      allow write, delete: if isAdmin();
+      // Normal kullanıcılar için yazma izni
+      allow write: if isAuthenticated();
+      
+      // Admin kullanıcılar için silme izni
+      allow delete: if isAdmin();
       
       // Admin SDK ile yapılan isteklere her zaman izin ver
       allow read, write: if request.resource.token != null;
     }
 
     match /{allPaths=**} {
-      // Admin tüm işlemleri yapabilir
-      allow read, write: if isAdmin();
-      
       // Giriş yapmış kullanıcılar okuyabilir
       allow read: if isAuthenticated();
+      
+      // Giriş yapmış kullanıcılar yazabilir
+      allow write: if isAuthenticated();
     }
   }
 } 
