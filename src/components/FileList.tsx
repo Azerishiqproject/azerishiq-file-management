@@ -9,7 +9,7 @@ interface FileListProps {
     files: FileData[];
     userRole: string;
     isLoading?: boolean;
-    onDownload: (downloadURL: string) => void;
+    onDownload: (downloadURL: string, fileName: string) => void;
     onDelete?: (id: string) => void;
 }
 
@@ -110,7 +110,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                     <div className="flex-1 min-w-[200px]">
                         <input
                             type="text"
-                            placeholder="Dosya ara..."
+                            placeholder="Fayl axtar..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
@@ -121,22 +121,22 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                         onChange={(e) => setSelectedType(e.target.value as FileType | 'all')}
                         className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                        <option value="all">Tüm Dosyalar</option>
+                        <option value="all">Bütün Fayllar</option>
                         <option value="pdf">PDF</option>
                         <option value="word">Word</option>
                         <option value="excel">Excel</option>
-                        <option value="other">Diğer</option>
+                        <option value="other">Diğər</option>
                     </select>
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as SortOption)}
                         className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     >
-                        <option value="newest">En Yeni</option>
-                        <option value="oldest">En Eski</option>
-                        <option value="largest">En Büyük</option>
-                        <option value="smallest">En Küçük</option>
-                        <option value="name">İsme Göre</option>
+                        <option value="newest">Yeni Fayllar</option>
+                        <option value="oldest">Köhnə Fayllar</option>
+                        <option value="largest">Böyük Ölçülü</option>
+                        <option value="smallest">Kiçik Ölçülü</option>
+                        <option value="name">Ad'a Görə</option>
                     </select>
                 </div>
             </div>
@@ -178,7 +178,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                                 <span>{file.downloads}</span>
                             </div>
                             <button
-                                onClick={() => onDownload(file.downloadURL)}
+                                onClick={() => onDownload(file.downloadURL, file.name)}
                                 className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
                                 title="İndir"
                             >

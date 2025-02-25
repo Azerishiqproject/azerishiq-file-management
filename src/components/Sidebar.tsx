@@ -8,7 +8,7 @@ export default function Sidebar() {
 
     const menuItems = [
         {
-            name: 'Ana Sayfa',
+            name: 'Ana Səhifə',
             path: '/dashboard',
             icon: (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,7 +17,7 @@ export default function Sidebar() {
             )
         },
         {
-            name: 'Dosya Yükle',
+            name: 'Fayl Yükle',
             path: '/dashboard/upload',
             icon: (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

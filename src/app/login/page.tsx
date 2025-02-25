@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const LoadingSpinner = () => (
     <motion.div
@@ -75,20 +76,18 @@ export default function LoginPage() {
                             animate={{ scale: 1 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <h1 className="text-center text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text">
-                                Azerishiq
-                            </h1>
+                            <div className="flex justify-center text-4xl font-bold">
+                                <Image src="/azerishiqLogo.png" alt="Azerishiq Logo" className="h-16" width={256} height={64} />
+                            </div>
                         </motion.div>
-                        <h2 className="text-center text-2xl font-medium text-gray-700">
-                            Hesabınıza giriş yapın
-                        </h2>
+                        
                     </div>
 
                     <form className="space-y-6" onSubmit={handleLogin}>
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    E-posta
+                                    Email
                                 </label>
                                 <input
                                     id="email"
@@ -97,14 +96,14 @@ export default function LoginPage() {
                                     required
                                     disabled={isSubmitting}
                                     className="block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ease-in-out text-gray-900 text-base"
-                                    placeholder="E-posta adresinizi girin"
+                                    placeholder="Emailinizi daxil edin"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
                             <div className="space-y-2">
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                    Şifre
+                                    Şifrə
                                 </label>
                                 <input
                                     id="password"
@@ -113,7 +112,7 @@ export default function LoginPage() {
                                     required
                                     disabled={isSubmitting}
                                     className="block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ease-in-out text-gray-900 text-base"
-                                    placeholder="Şifrenizi girin"
+                                    placeholder="Şifrənizi daxil edin"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
@@ -142,10 +141,10 @@ export default function LoginPage() {
                             {isSubmitting ? (
                                 <div className="flex items-center justify-center">
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                                    Giriş yapılıyor...
+                                    Daxil olunur...
                                 </div>
                             ) : (
-                                'Giriş Yap'
+                                'Daxil ol'
                             )}
                         </motion.button>
                     </form>

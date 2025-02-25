@@ -297,10 +297,10 @@ export default function AdminPage() {
                                 transition={{ duration: 0.3 }}
                             >
                                 <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2">
-                                    Kullanıcı Yönetimi
+                                    Admin Panel
                                 </h1>
                                 <p className="text-gray-600">
-                                    Yeni kullanıcı ekleyin ve mevcut kullanıcıları yönetin
+                                    Yeni istifadəçi əlavə edin və mövcud istifadəçiləri idarə edin
                                 </p>
                             </motion.div>
                         </div>
@@ -313,7 +313,7 @@ export default function AdminPage() {
                             className="bg-white rounded-2xl shadow-sm p-6 mb-6"
                         >
                             <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-semibold text-gray-800">Kullanıcı Listesi</h2>
+                                <h2 className="text-xl font-semibold text-gray-800">İstifadəçi Siyahısı</h2>
                                 {(error || success) && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
@@ -336,13 +336,13 @@ export default function AdminPage() {
                                         <thead>
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    E-posta
+                                                    Email
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Rol
                                                 </th>
                                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    İşlemler
+                                                    Status
                                                 </th>
                                             </tr>
                                         </thead>
@@ -365,7 +365,7 @@ export default function AdminPage() {
                                                                 className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                                                 disabled={user.status === 'disabled'}
                                                             >
-                                                                <option value="user">Kullanıcı</option>
+                                                                <option value="user">İstifadəçi</option>
                                                                 <option value="admin">Admin</option>
                                                             </select>
                                                         ) : (
@@ -430,7 +430,7 @@ export default function AdminPage() {
                                                                 </button>
                                                                 <button
                                                                     onClick={() => {
-                                                                        if (window.confirm(`${user.email} kullanıcısını ${user.status === 'active' ? 'devre dışı bırakmak' : 'aktif etmek'} istediğinizden emin misiniz?`)) {
+                                                                        if (window.confirm(`${user.email} istifadəçisini ${user.status === 'active' ? 'deactiv etmək' : 'aktif etmək'} isdədiyinizdən əminsiniz?`)) {
                                                                             handleUserStatus(user.uid);
                                                                         }
                                                                     }}
@@ -440,7 +440,7 @@ export default function AdminPage() {
                                                                             : 'text-green-600 hover:text-green-900'
                                                                     }`}
                                                                 >
-                                                                    {user.status === 'active' ? 'Devre Dışı Bırak' : 'Aktif Et'}
+                                                                    {user.status === 'active' ? 'Deactive et' : 'Aktif Et'}
                                                                 </button>
                                                             </>
                                                         )}
@@ -460,19 +460,19 @@ export default function AdminPage() {
                             transition={{ duration: 0.5 }}
                             className="bg-white rounded-2xl shadow-sm p-6"
                         >
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Yeni Kullanıcı Ekle</h2>
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Yeni İstifadəçi əlavə et</h2>
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="space-y-4">
                                     <div>
                                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                            E-posta
+                                            Email
                                         </label>
                                         <input
                                             type="email"
                                             id="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
                                             required
                                             disabled={isSubmitting}
                                         />
@@ -480,14 +480,14 @@ export default function AdminPage() {
 
                                     <div>
                                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                            Şifre
+                                            Şifrə
                                         </label>
                                         <input
                                             type="password"
                                             id="password"
                                             value={formData.password}
                                             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
                                             required
                                             disabled={isSubmitting}
                                         />
@@ -495,16 +495,16 @@ export default function AdminPage() {
 
                                     <div>
                                         <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                                            Kullanıcı Rolü
+                                            İstifadəçi Rolu
                                         </label>
                                         <select
                                             id="role"
                                             value={formData.role}
                                             onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
-                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
                                             disabled={isSubmitting}
                                         >
-                                            <option value="user">Kullanıcı</option>
+                                            <option value="user">İstifadəçi</option>
                                             <option value="admin">Admin</option>
                                         </select>
                                     </div>
@@ -543,10 +543,10 @@ export default function AdminPage() {
                                         {isSubmitting ? (
                                             <div className="flex items-center">
                                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                                                İşleniyor...
+                                                Əməliyyat...
                                             </div>
                                         ) : (
-                                            'Kullanıcı Oluştur'
+                                            'İstifadəçi yarat'
                                         )}
                                     </motion.button>
                                 </div>

@@ -44,7 +44,7 @@ export default function UploadPage() {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        setSelectedFile(file); // Set the selected file without uploading immediately
+        setSelectedFile(file); // Seçilen dosyayı yüklemeden ayarla
     };
 
     const handleMultipleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,18 +53,18 @@ export default function UploadPage() {
 
         // Maksimum 50 dosya kontrolü
         if (files.length > 50) {
-            toast.error('En fazla 50 dosya seçebilirsiniz');
+            toast.error('Maksimum 50 fayl seçə bilərsiniz');
             return;
         }
 
         try {
             setIsUploading(true);
             await uploadMultipleFiles(files);
-            toast.success('Dosyalar başarıyla yüklendi');
+            toast.success('Fayllar uğurla yükləndi');
             event.target.value = '';
         } catch (error) {
-            console.error('Bulk upload error:', error);
-            toast.error('Dosyalar yüklenirken bir hata oluştu');
+            console.error('Toplu yükleme hatası:', error);
+            toast.error('Fayllar yüklənərkən bir xəta baş verdi');
         } finally {
             setIsUploading(false);
         }
@@ -75,20 +75,20 @@ export default function UploadPage() {
             try {
                 setIsUploading(true);
                 await uploadFile(selectedFile, description);
-                toast.success('Dosya başarıyla yüklendi');
-                // Form'u temizle
+                toast.success('Fayl uğurla yükləndi');
+                // Formu sıfırla
                 setDescription('');
                 setSelectedFile(null);
             } catch (error) {
-                console.error('Upload error:', error);
-                toast.error('Dosya yüklenirken bir hata oluştu');
+                console.error('Yükleme hatası:', error);
+                toast.error('Fayl yüklənərkən xəta baş verdi');
             } finally {
                 setIsUploading(false);
             }
         }
     };
 
-    // Loading durumunda spinner göster
+    // Yükleniyor durumunda spinner göster
     if (authStatus === 'loading' || !userData) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-50">
@@ -114,7 +114,7 @@ export default function UploadPage() {
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-indigo-50">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-red-600 mb-2">Erişim Reddedildi</h1>
-                    <p className="text-gray-600">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
+                    <p className="text-gray-600">Bu səhifəyə giriş icazəniz yoxdur.</p>
                 </div>
             </div>
         );
@@ -140,16 +140,16 @@ export default function UploadPage() {
                                 transition={{ duration: 0.3 }}
                             >
                                 <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2 text-black">
-                                    Dosya Yükleme
+                                    Fayl Yükleme
                                 </h1>
                                 <p className="text-gray-600 mb-6">
-                                    Sisteme yeni dosyalar yükleyebilirsiniz.
+                                    Sisteme yeni fayllar yükləyə bilərsiniz.
                                 </p>
 
                                 <div className="space-y-6">
                                     {/* Tekli dosya yükleme */}
                                     <div className="bg-gray-50 p-6 rounded-xl">
-                                        <h2 className="text-lg font-semibold mb-4 text-black">Tekli Dosya Yükleme</h2>
+                                        <h2 className="text-lg font-semibold mb-4 text-black">Tək Fayl Yükleme</h2>
                                         <div className="space-y-4">
                                             <div className="flex gap-4">
                                                 <input
@@ -167,15 +167,15 @@ export default function UploadPage() {
                                             <textarea
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
-                                                placeholder="Açıklama (isteğe bağlı)"
-                                                className="w-full p-2 border rounded"
+                                                placeholder="Açıqlama (isteğe bağlı)"
+                                                className="w-full p-2 border rounded text-black"
                                             />
                                         </div>
                                     </div>
 
                                     {/* Toplu dosya yükleme */}
                                     <div className="bg-gray-50 p-6 rounded-xl">
-                                        <h2 className="text-lg font-semibold mb-4 text-black">Toplu Dosya Yükleme</h2>
+                                        <h2 className="text-lg font-semibold mb-4 text-black">Toplu Fayl Yükleme</h2>
                                         <div
                                             onDragOver={handleDragOver}
                                             onDragLeave={handleDragLeave}
@@ -199,7 +199,7 @@ export default function UploadPage() {
                                                     hover:file:bg-indigo-100"
                                             />
                                             <p className="text-sm text-gray-500 mt-2">
-                                                En fazla 50 dosya seçebilirsiniz
+                                                Maksimum 50 fayl seçə bilərsiniz
                                             </p>
                                         </div>
                                     </div>

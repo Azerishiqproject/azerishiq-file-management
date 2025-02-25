@@ -186,10 +186,13 @@ export async function POST(request: Request) {
 
     } catch (error: unknown) {
         console.error('Request processing error:', error);
+        console.error('Error details:', {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined
+        });
         return NextResponse.json({ 
             error: 'Request failed',
             details: error instanceof Error ? error.message : 'Failed to process upload request',
-            stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
         }, { status: 500 });
     }
 } 

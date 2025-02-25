@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { User } from '@/types/user';
+import Image from 'next/image';
 
 interface NavbarProps {
     user: User;
@@ -26,8 +27,8 @@ export default function Navbar({ user }: NavbarProps) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
                 <div className="flex justify-between items-center h-full">
                     <div className="flex items-center">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text">
-                            Azerishiq
+                        <h1 className="text-2xl font-bold">
+                            <Image src="/azerishiqLogo.png" alt="Azerishiq Logo" className="h-8" width={128} height={32} />
                         </h1>
                     </div>
 

@@ -78,7 +78,7 @@ export default function DashboardPage() {
         }
     }, [handleProtectedNavigation, userData, fetchFiles]);
 
-    const handleDownload = async (downloadURL: string) => {
+    const handleDownload = async (downloadURL: string, fileName: string) => {
         try {
             console.log('Download URL:', downloadURL);
             if (!downloadURL) {
@@ -94,7 +94,7 @@ export default function DashboardPage() {
             const blob = await response.blob();
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', ''); // Dosya indirme işlemi için
+            link.setAttribute('download', fileName);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -178,12 +178,12 @@ export default function DashboardPage() {
                                 transition={{ duration: 0.3, delay: 0.2 }}
                             >
                                 <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2">
-                                    {userData.role === 'admin' ? 'Tüm Dosyalar' : 'Dosyalar'}
+                                    {userData.role === 'admin' ? 'Bütün fayllar' : 'Fayllar'}
                                 </h1>
                                 <p className="text-gray-600 mb-4">
                                     {userData.role === 'admin' 
-                                        ? 'Sistemdeki tüm dosyaları buradan yönetebilirsiniz.'
-                                        : 'Size atanan dosyaları buradan görüntüleyebilirsiniz.'}
+                                        ? 'Sistemdəki faylları burdan idarə edə bilərsiniz.'
+                                        : 'Sistemdəki faylları burdan görə bilərsiniz.'}
                                 </p>
 
                                 {error && (
@@ -206,7 +206,10 @@ export default function DashboardPage() {
                             <FileList 
                                 files={files} 
                                 userRole={userData.role}
-                                onDownload={handleDownload}
+                                onDownload={(downloadURL: string, fileName: string) => {
+                                    handleDownload(downloadURL, fileName);
+                                    return void 0;
+                                }}
                                 onDelete={userData.role === 'admin' ? handleDelete : undefined}
                                 isLoading={isLoading}
                             />
