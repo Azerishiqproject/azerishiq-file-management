@@ -20,7 +20,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'No key provided' }, { status: 400 });
         }
 
-        // Firebase Storage URL'den dosya yolunu çıkar
+        // Firebase Storage URL'den dosyaaa yolunu çıkar
         const filePath = key.split('/o/')[1]?.split('?')[0];
         if (!filePath) {
             return NextResponse.json({ error: 'Invalid file path' }, { status: 400 });
