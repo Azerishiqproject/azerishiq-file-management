@@ -7,26 +7,42 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 let app: App;
 if (!getApps().length) {
     try {
-        // İki farklı yöntem deneyelim - OpenSSL hatası için
+        console.log('Initializing Firebase Admin SDK...');
+        console.log('Node.js version:', process.version);
+        console.log('Platform:', process.platform);
+        
+        // Service Account JSON string'i varsa
+        const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+        
+        // Environment variables kontrolü
+        console.log('Environment variables check:', {
+            hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
+            hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+            hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+            hasServiceAccount: !!serviceAccountJson,
+            serviceAccountLength: serviceAccountJson ? serviceAccountJson.length : 0
+        });
+        
         let credential;
         
-        // 1. Yöntem: Service Account JSON string'i varsa
-        const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+        // Service Account JSON kullanarak başlatma dene
         if (serviceAccountJson) {
             try {
                 // JSON string'i parse et
                 const serviceAccount = JSON.parse(serviceAccountJson);
                 credential = cert(serviceAccount);
-                console.log('Using service account JSON method');
+                console.log('Successfully initialized with service account JSON');
             } catch (jsonError) {
                 console.error('Service account JSON parse error:', jsonError);
                 // JSON parse hatası, ikinci yönteme geç
             }
         }
         
-        // 2. Yöntem: Ayrı environment variables
+        // Eğer service account ile başlatma başarısız olduysa, ayrı environment variables kullan
         if (!credential) {
-            // Private key formatını düzelt - OpenSSL hatası için özel çözüm
+            console.log('Falling back to individual credentials method');
+            
+            // Private key formatını düzelt
             let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
             
             // Eğer JSON string olarak kaydedilmişse (Vercel'de yaygın)
@@ -37,12 +53,12 @@ if (!getApps().length) {
             // Escape karakterlerini düzelt
             privateKey = privateKey.replace(/\\n/g, '\n');
             
-            console.log('Using individual credentials method');
             credential = cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey: privateKey
             });
+            console.log('Successfully initialized with individual credentials');
         }
 
         app = initializeApp({
