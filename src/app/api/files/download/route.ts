@@ -11,7 +11,7 @@ const s3Client = new S3Client({
     },
 });
 
-export async function GET(request: Request) {
+export async function GET(request: Request) { 
     try {
         const { searchParams } = new URL(request.url);
         const key = searchParams.get('key');

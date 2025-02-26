@@ -62,7 +62,7 @@ export const listFiles = async (): Promise<FileData[]> => {
 
 // Dosya yükleme
 export const uploadFile = async (file: File, description: string) => {
-    const loadingToast = toast.loading('Dosya yükleniyor...');
+    const loadingToast = toast.loading('Fayl yüklənir...');
     try {
         const formData = new FormData();
         formData.append('file', file);
@@ -80,13 +80,13 @@ export const uploadFile = async (file: File, description: string) => {
         }
 
         const data = await response.json();
-        toast.success('Dosya başarıyla yüklendi', {
+        toast.success('Fayl uğurla yüklendi', {
             id: loadingToast
         });
         return data as FileData;
     } catch (error) {
         console.error('Upload error details:', error);
-        toast.error(error instanceof Error ? error.message : 'Dosya yüklenirken bir hata oluştu', {
+        toast.error(error instanceof Error ? error.message : 'Fayl yüklənərkən xəta baş verdi', {
             id: loadingToast
         });
         throw error;
@@ -95,7 +95,7 @@ export const uploadFile = async (file: File, description: string) => {
 
 // Toplu dosya yükleme
 export const uploadMultipleFiles = async (files: File[]) => {
-    const loadingToast = toast.loading(`${files.length} dosya yükleniyor...`);
+    const loadingToast = toast.loading(`${files.length} fayl yüklənir...`);
     try {
         const uploadPromises = files.map(file => {
             const formData = new FormData();
@@ -114,13 +114,13 @@ export const uploadMultipleFiles = async (files: File[]) => {
         });
 
         const results = await Promise.all(uploadPromises);
-        toast.success(`${files.length} dosya başarıyla yüklendi`, {
+        toast.success(`${files.length} fayl uğurla yüklendi`, {
             id: loadingToast
         });
         return results as FileData[];
     } catch (error) {
         console.error('Bulk upload error details:', error);
-        toast.error(error instanceof Error ? error.message : 'Dosyalar yüklenirken bir hata oluştu', {
+        toast.error(error instanceof Error ? error.message : 'Fayllar yüklənərkən xəta baş verdi', {
             id: loadingToast
         });
         throw error;

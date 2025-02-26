@@ -88,7 +88,7 @@ export default function DashboardPage() {
             // Fetch API ile dosyayı indir
             const response = await fetch(downloadURL);
             if (!response.ok) {
-                throw new Error('Dosya indirilemedi');
+                throw new Error('Fayl yüklənmədi');
             }
 
             const blob = await response.blob();
@@ -98,26 +98,26 @@ export default function DashboardPage() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            toast.success('Dosya indiriliyor...');
+            toast.success('Fayl yüklənir...');
         } catch (error) {
             console.error('Download error:', error);
-            toast.error('Dosya indirilirken bir hata oluştu');
+            toast.error('Fayl yüklənərkən xəta baş verdi');
         }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
+        if (!confirm('Bu faylı silmek istədiyinizə əminsiniz?')) {
             return;
         }
 
         try {
             setIsLoading(true);
             await deleteFile(id);
-            toast.success('Dosya başarıyla silindi');
+            toast.success('Fayl uğurla silindi');
             await fetchFiles();
         } catch (error) {
             console.error('Error deleting file:', error);
-            toast.error('Dosya silinirken bir hata oluştu');
+            toast.error('Fayl silinirken xəta baş verdi');
         } finally {
             setIsLoading(false);
         }

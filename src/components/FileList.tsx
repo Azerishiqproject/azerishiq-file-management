@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { FileData, FileType } from '@/types/file';
 import { motion } from 'framer-motion';
-import { FiDownload, FiTrash2, FiEye, FiDownloadCloud } from 'react-icons/fi';
+import { FiDownload, FiTrash2, FiEye, FiDownloadCloud, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 interface FileListProps {
     files: FileData[];
@@ -19,6 +19,16 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedType, setSelectedType] = useState<FileType | 'all'>('all');
     const [sortBy, setSortBy] = useState<SortOption>('newest');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
+    const truncateFileName = (name: string, maxLength: number = 90) => {
+        if (name.length <= maxLength) return name;
+        const extension = name.split('.').pop();
+        const nameWithoutExt = name.substring(0, name.lastIndexOf('.'));
+        const truncatedName = nameWithoutExt.substring(0, maxLength - 3 - (extension?.length || 0));
+        return `${truncatedName}...${extension ? `.${extension}` : ''}`;
+    };
 
     const getFileIcon = (type: string) => {
         switch (type.toLowerCase()) {
@@ -53,17 +63,14 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
 
     const filteredAndSortedFiles = useMemo(() => {
         const result = files.filter(file => {
-            // İsim ve başlık filtresi
             const searchMatch = (file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                file.title.toLowerCase().includes(searchTerm.toLowerCase()));
             
-            // Dosya tipi filtresi
             const typeMatch = selectedType === 'all' || file.type === selectedType;
 
             return searchMatch && typeMatch;
         });
 
-        // Sıralama
         return result.sort((a, b) => {
             switch (sortBy) {
                 case 'newest':
@@ -82,6 +89,18 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
         });
     }, [files, searchTerm, selectedType, sortBy]);
 
+    const paginatedFiles = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredAndSortedFiles.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredAndSortedFiles, currentPage]);
+
+    const totalPages = Math.ceil(filteredAndSortedFiles.length / itemsPerPage);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     if (isLoading) {
         return (
             <div className="bg-white rounded-2xl shadow-sm p-6">
@@ -97,7 +116,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
     if (files.length === 0) {
         return (
             <div className="bg-white rounded-2xl shadow-sm p-6 text-center">
-                <p className="text-gray-500">Henüz dosya yüklenmemiş.</p>
+                <p className="text-gray-500">File yoxdur.</p>
             </div>
         );
     }
@@ -143,7 +162,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
 
             {/* Dosya listesi */}
             <div className="bg-white rounded-2xl shadow-sm divide-y">
-                {filteredAndSortedFiles.map((file, index) => (
+                {paginatedFiles.map((file, index) => (
                     <motion.div
                         key={file.id}
                         initial={{ opacity: 0, y: 20 }}
@@ -155,7 +174,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                             {getFileIcon(file.type)}
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-gray-900 truncate">
-                                    {file.title || file.name}
+                                    {truncateFileName(file.title || file.name)}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                     {new Date(file.createdAt).toLocaleDateString('tr-TR')} • {(file.size / 1024 / 1024).toFixed(2)} MB
@@ -198,6 +217,41 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                     </motion.div>
                 ))}
             </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center space-x-2 mt-4 pb-4">
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`p-2 rounded-lg ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                    >
+                        <FiChevronLeft className="w-5 h-5" />
+                    </button>
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-4 py-2 rounded-lg ${
+                                currentPage === page
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            {page}
+                        </button>
+                    ))}
+                    
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`p-2 rounded-lg ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}`}
+                    >
+                        <FiChevronRight className="w-5 h-5" />
+                    </button>
+                </div>
+            )}
         </div>
     );
 } 
