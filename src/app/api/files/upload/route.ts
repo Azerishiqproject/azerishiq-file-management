@@ -7,29 +7,46 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 let app: App;
 if (!getApps().length) {
     try {
-        // Private key formatını düzelt - hem Windows hem de MacOS için çalışacak şekilde
-        let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+        // İki farklı yöntem deneyelim - OpenSSL hatası için
+        let credential;
         
-        // Eğer JSON string olarak kaydedilmişse (Vercel'de yaygın)
-        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-            privateKey = privateKey.slice(1, -1);
+        // 1. Yöntem: Service Account JSON string'i varsa
+        const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (serviceAccountJson) {
+            try {
+                // JSON string'i parse et
+                const serviceAccount = JSON.parse(serviceAccountJson);
+                credential = cert(serviceAccount);
+                console.log('Using service account JSON method');
+            } catch (jsonError) {
+                console.error('Service account JSON parse error:', jsonError);
+                // JSON parse hatası, ikinci yönteme geç
+            }
         }
         
-        // Escape karakterlerini düzelt
-        privateKey = privateKey.replace(/\\n/g, '\n');
-        
-        console.log('Initializing Firebase Admin with:', {
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
-            hasPrivateKey: !!privateKey
-        });
-
-        app = initializeApp({
-            credential: cert({
+        // 2. Yöntem: Ayrı environment variables
+        if (!credential) {
+            // Private key formatını düzelt - OpenSSL hatası için özel çözüm
+            let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+            
+            // Eğer JSON string olarak kaydedilmişse (Vercel'de yaygın)
+            if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+                privateKey = privateKey.slice(1, -1);
+            }
+            
+            // Escape karakterlerini düzelt
+            privateKey = privateKey.replace(/\\n/g, '\n');
+            
+            console.log('Using individual credentials method');
+            credential = cert({
                 projectId: process.env.FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                 privateKey: privateKey
-            }),
+            });
+        }
+
+        app = initializeApp({
+            credential: credential,
             storageBucket: process.env.FIREBASE_STORAGE_BUCKET
         });
         console.log('Firebase Admin initialized successfully');
@@ -48,6 +65,17 @@ const bucket = getStorage(app).bucket();
 export async function POST(request: Request) {
     try {
         console.log('Starting file upload process...');
+        
+        // Environment variables kontrolü
+        console.log('Environment variables check:', {
+            hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
+            hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+            hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+            hasServiceAccount: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+            hasStorageBucket: !!process.env.FIREBASE_STORAGE_BUCKET,
+            nodeVersion: process.version,
+            platform: process.platform
+        });
 
         // CORS headers ekle
         const headers = new Headers({
