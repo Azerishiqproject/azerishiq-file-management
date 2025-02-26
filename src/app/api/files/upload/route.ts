@@ -66,6 +66,14 @@ export async function POST(request: Request) {
     try {
         console.log('Starting file upload process...');
         
+        // Service Account kontrolü
+        const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+        console.log('Service Account check:', {
+            hasServiceAccount: !!serviceAccountJson,
+            serviceAccountLength: serviceAccountJson ? serviceAccountJson.length : 0,
+            serviceAccountStart: serviceAccountJson ? serviceAccountJson.substring(0, 20) + '...' : ''
+        });
+        
         // Environment variables kontrolü
         console.log('Environment variables check:', {
             hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
