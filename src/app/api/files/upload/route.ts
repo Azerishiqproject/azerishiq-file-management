@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
 // Firebase Admin SDK yapılandırması
-let app;
+let app: App;
 if (!getApps().length) {
     try {
-        const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+        // Private key formatını düzelt - hem Windows hem de MacOS için çalışacak şekilde
+        let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+        
+        // Eğer JSON string olarak kaydedilmişse (Vercel'de yaygın)
+        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+            privateKey = privateKey.slice(1, -1);
+        }
+        
+        // Escape karakterlerini düzelt
+        privateKey = privateKey.replace(/\\n/g, '\n');
+        
         console.log('Initializing Firebase Admin with:', {
             projectId: process.env.FIREBASE_PROJECT_ID,
             hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
@@ -49,6 +59,15 @@ export async function POST(request: Request) {
         // OPTIONS request için response
         if (request.method === 'OPTIONS') {
             return new Response(null, { headers });
+        }
+
+        // Firebase Admin SDK'nın doğru başlatıldığını kontrol et
+        if (!app || !bucket) {
+            console.error('Firebase Admin SDK not properly initialized');
+            return NextResponse.json({ 
+                error: 'Server configuration error',
+                details: 'Firebase Admin SDK not properly initialized'
+            }, { status: 500 });
         }
 
         // Form verilerini al
@@ -111,45 +130,81 @@ export async function POST(request: Request) {
             console.log('Starting Firebase Storage upload...');
             const file = bucket.file(filePath);
             
-            await file.save(buffer, {
-                metadata: {
-                    contentType: fileType,
+            // Dosya yükleme işlemini try-catch bloğu içinde yap
+            try {
+                await file.save(buffer, {
                     metadata: {
-                        title,
-                        description,
-                        originalName: fileName
+                        contentType: fileType,
+                        metadata: {
+                            title: title || '',
+                            description: description || '',
+                            originalName: fileName
+                        }
                     }
-                }
-            });
-            console.log('File uploaded to Firebase Storage successfully');
+                });
+                console.log('File uploaded to Firebase Storage successfully');
+            } catch (uploadError) {
+                console.error('Firebase Storage upload error:', uploadError);
+                return NextResponse.json({ 
+                    error: 'Storage upload failed',
+                    details: uploadError instanceof Error ? uploadError.message : 'Failed to upload file to storage',
+                }, { status: 500 });
+            }
 
             // Download URL al
             console.log('Getting download URL...');
-            const [downloadURL] = await file.getSignedUrl({
-                action: 'read',
-                expires: '03-01-2500'
-            });
-            console.log('Download URL obtained:', downloadURL);
+            let downloadURL;
+            try {
+                const [url] = await file.getSignedUrl({
+                    action: 'read',
+                    expires: '03-01-2500'
+                });
+                downloadURL = url;
+                console.log('Download URL obtained:', downloadURL);
+            } catch (urlError) {
+                console.error('Failed to get download URL:', urlError);
+                return NextResponse.json({ 
+                    error: 'Failed to get download URL',
+                    details: urlError instanceof Error ? urlError.message : 'Could not generate download URL',
+                }, { status: 500 });
+            }
 
             // Firestore'a metadata kaydet
             console.log('Saving metadata to Firestore...');
-            const docRef = await db.collection('docs').add({
-                name: fileName,
-                title,
-                description,
-                size: fileSize,
-                type: fileType,
-                createdAt: Timestamp.now(),
-                updatedAt: Timestamp.now(),
-                downloadURL,
-                path: filePath,
-                status: 'active',
-                views: 0,
-                downloads: 0,
-                uploadedBy: 'anonymous',
-                uploadedByEmail: 'anonymous'
-            });
-            console.log('Metadata saved to Firestore successfully');
+            let docRef;
+            try {
+                docRef = await db.collection('docs').add({
+                    name: fileName,
+                    title: title || fileName,
+                    description: description || '',
+                    size: fileSize,
+                    type: fileType,
+                    createdAt: Timestamp.now(),
+                    updatedAt: Timestamp.now(),
+                    downloadURL,
+                    path: filePath,
+                    status: 'active',
+                    views: 0,
+                    downloads: 0,
+                    uploadedBy: 'anonymous',
+                    uploadedByEmail: 'anonymous'
+                });
+                console.log('Metadata saved to Firestore successfully');
+            } catch (firestoreError) {
+                console.error('Firestore save error:', firestoreError);
+                // Dosya yüklendi ama metadata kaydedilemedi, dosyayı silmeyi dene
+                try {
+                    await file.delete();
+                    console.log('Deleted file from storage after Firestore error');
+                } catch (deleteError) {
+                    console.error('Failed to delete file after Firestore error:', deleteError);
+                }
+                
+                return NextResponse.json({ 
+                    error: 'Database operation failed',
+                    details: firestoreError instanceof Error ? firestoreError.message : 'Failed to save file metadata',
+                }, { status: 500 });
+            }
 
             // Başarılı yanıt dön
             return NextResponse.json({

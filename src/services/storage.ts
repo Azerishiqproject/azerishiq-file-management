@@ -74,7 +74,9 @@ export const uploadFile = async (file: File, description: string) => {
         });
 
         if (!response.ok) {
-            throw new Error('Dosya yüklenirken bir hata oluştu');
+            const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
+            console.error('Upload error response:', errorData);
+            throw new Error(errorData.details || errorData.error || 'Dosya yüklenirken bir hata oluştu');
         }
 
         const data = await response.json();
@@ -83,7 +85,10 @@ export const uploadFile = async (file: File, description: string) => {
         });
         return data as FileData;
     } catch (error) {
-        handleError(error, 'Failed to upload file');
+        console.error('Upload error details:', error);
+        toast.error(error instanceof Error ? error.message : 'Dosya yüklenirken bir hata oluştu', {
+            id: loadingToast
+        });
         throw error;
     }
 };
@@ -99,9 +104,10 @@ export const uploadMultipleFiles = async (files: File[]) => {
             return fetch(API_ENDPOINTS.UPLOAD, {
                 method: 'POST',
                 body: formData
-            }).then(response => {
+            }).then(async response => {
                 if (!response.ok) {
-                    throw new Error(`${file.name} yüklenirken hata oluştu`);
+                    const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
+                    throw new Error(errorData.details || errorData.error || `${file.name} yüklenirken hata oluştu`);
                 }
                 return response.json();
             });
@@ -113,7 +119,10 @@ export const uploadMultipleFiles = async (files: File[]) => {
         });
         return results as FileData[];
     } catch (error) {
-        handleError(error, 'Failed to upload files');
+        console.error('Bulk upload error details:', error);
+        toast.error(error instanceof Error ? error.message : 'Dosyalar yüklenirken bir hata oluştu', {
+            id: loadingToast
+        });
         throw error;
     }
 };
