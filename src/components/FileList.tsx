@@ -136,7 +136,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                         <option value="oldest">Köhnə Fayllar</option>
                         <option value="largest">Böyük Ölçülü</option>
                         <option value="smallest">Kiçik Ölçülü</option>
-                        <option value="name">Ad'a Görə</option>
+                        <option value="name">Ad siyahısına</option>
                     </select>
                 </div>
             </div>
