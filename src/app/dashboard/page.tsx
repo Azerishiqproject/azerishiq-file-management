@@ -19,6 +19,7 @@ export default function DashboardPage() {
     const [files, setFiles] = useState<FileData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const fetchFiles = useCallback(async () => {
         try {
@@ -145,22 +146,41 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar user={{
-                id: userData.uid,
-                username: userData.email || '',
-                role: userData.role
-            }} />
+            <Navbar 
+                user={{
+                    id: userData.uid,
+                    username: userData.email || '',
+                    role: userData.role
+                }}
+                isSidebarOpen={isSidebarOpen}
+                onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            />
             
-            <div className="flex">
+            <div className="flex relative">
                 {/* Admin için sidebar */}
                 {userData.role === 'admin' && (
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5 }}
+                        animate={{ 
+                            opacity: 1, 
+                            x: 0,
+                            translateX: isSidebarOpen ? '0%' : '-100%'
+                        }}
+                        transition={{ duration: 0.3 }}
+                        className={`fixed lg:relative lg:translate-x-0 top-0 left-0 h-full z-40 bg-white shadow-xl lg:shadow-none ${
+                            isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                        }`}
                     >
                         <Sidebar />
                     </motion.div>
+                )}
+
+                {/* Overlay for mobile sidebar */}
+                {isSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
                 )}
 
                 {/* Ana içerik */}
@@ -168,7 +188,7 @@ export default function DashboardPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex-1 p-6"
+                    className="flex-1 p-6 lg:ml-0"
                 >
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">

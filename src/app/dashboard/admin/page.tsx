@@ -55,6 +55,7 @@ export default function AdminPage() {
         confirmPassword: ''
     });
     const [resettingPasswordFor, setResettingPasswordFor] = useState<string | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
         handleProtectedNavigation('/dashboard/admin');
@@ -279,24 +280,52 @@ export default function AdminPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar user={{
-                id: userData.uid,
-                username: userData.email || '',
-                role: userData.role
-            }} />
+            <Navbar 
+                user={{
+                    id: userData.uid,
+                    username: userData.email || '',
+                    role: userData.role
+                }}
+                isSidebarOpen={isSidebarOpen}
+                onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            />
             
-            <div className="flex">
-                <Sidebar />
+            <div className="flex relative">
+                {/* Admin için sidebar */}
+                {userData.role === 'admin' && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ 
+                            opacity: 1, 
+                            x: 0,
+                            translateX: isSidebarOpen ? '0%' : '-100%'
+                        }}
+                        transition={{ duration: 0.3 }}
+                        className={`fixed lg:relative lg:translate-x-0 top-0 left-0 h-full z-40 bg-white shadow-xl lg:shadow-none ${
+                            isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                        }`}
+                    >
+                        <Sidebar />
+                    </motion.div>
+                )}
 
-                <main className="flex-1 p-6">
+                {/* Overlay for mobile sidebar */}
+                {isSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
+
+                <main className="flex-1 p-4 sm:p-6 w-full">
                     <div className="max-w-4xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+                        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-6">
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2">
+                                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2">
                                     Admin Panel
                                 </h1>
                                 <p className="text-gray-600">
@@ -310,15 +339,15 @@ export default function AdminPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="bg-white rounded-2xl shadow-sm p-6 mb-6"
+                            className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-6"
                         >
-                            <div className="flex justify-between items-center mb-4">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                                 <h2 className="text-xl font-semibold text-gray-800">İstifadəçi Siyahısı</h2>
                                 {(error || success) && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className={`p-3 rounded-lg text-sm ${
+                                        className={`w-full sm:w-auto p-3 rounded-lg text-sm ${
                                             error ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
                                         }`}
                                     >
@@ -331,124 +360,132 @@ export default function AdminPage() {
                                     <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead>
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Email
-                                                </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Rol
-                                                </th>
-                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Status
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {users.map((user) => (
-                                                <tr key={user.uid} className={user.status === 'disabled' ? 'bg-gray-50' : ''}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {user.email}
-                                                        {user.status === 'disabled' && (
-                                                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                                Devre Dışı
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {editingUser === user.uid ? (
-                                                            <select
-                                                                value={user.role}
-                                                                onChange={(e) => handleRoleChange(user.uid, e.target.value as UserRole)}
-                                                                className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                                disabled={user.status === 'disabled'}
-                                                            >
-                                                                <option value="user">İstifadəçi</option>
-                                                                <option value="admin">Admin</option>
-                                                            </select>
-                                                        ) : (
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                                user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'
-                                                            }`}>
-                                                                {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                                        {resettingPasswordFor === user.uid ? (
-                                                            <div className="flex items-center justify-end space-x-2">
-                                                                <div className="flex flex-col space-y-2">
-                                                                    <input
-                                                                        type="password"
-                                                                        placeholder="Yeni şifre"
-                                                                        value={passwordResetForm.newPassword}
-                                                                        onChange={(e) => setPasswordResetForm(prev => ({
-                                                                            ...prev,
-                                                                            newPassword: e.target.value
-                                                                        }))}
-                                                                        className="px-3 py-1 border rounded-md text-sm"
-                                                                    />
-                                                                    <input
-                                                                        type="password"
-                                                                        placeholder="Şifre tekrar"
-                                                                        value={passwordResetForm.confirmPassword}
-                                                                        onChange={(e) => setPasswordResetForm(prev => ({
-                                                                            ...prev,
-                                                                            confirmPassword: e.target.value
-                                                                        }))}
-                                                                        className="px-3 py-1 border rounded-md text-sm"
-                                                                    />
-                                                                </div>
-                                                                <button
-                                                                    onClick={() => handlePasswordReset(user.uid)}
-                                                                    className="text-green-600 hover:text-green-900"
-                                                                >
-                                                                    Güncelle
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setResettingPasswordFor(null);
-                                                                        setPasswordResetForm({
-                                                                            newPassword: '',
-                                                                            confirmPassword: ''
-                                                                        });
-                                                                    }}
-                                                                    className="text-gray-600 hover:text-gray-900"
-                                                                >
-                                                                    İptal
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => setEditingUser(user.uid)}
-                                                                    className="text-indigo-600 hover:text-indigo-900"
-                                                                >
-                                                                    Düzenle
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (window.confirm(`${user.email} istifadəçisini ${user.status === 'active' ? 'deactiv etmək' : 'aktif etmək'} isdədiyinizdən əminsiniz?`)) {
-                                                                            handleUserStatus(user.uid);
-                                                                        }
-                                                                    }}
-                                                                    className={`ml-2 ${
-                                                                        user.status === 'active' 
-                                                                            ? 'text-red-600 hover:text-red-900' 
-                                                                            : 'text-green-600 hover:text-green-900'
-                                                                    }`}
-                                                                >
-                                                                    {user.status === 'active' ? 'Deactive et' : 'Aktif Et'}
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </td>
+                                <div className="-mx-4 sm:mx-0 overflow-x-auto">
+                                    <div className="inline-block min-w-full align-middle">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Email
+                                                    </th>
+                                                    <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Rol
+                                                    </th>
+                                                    <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Status
+                                                    </th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {users.map((user) => (
+                                                    <tr key={user.uid} className={user.status === 'disabled' ? 'bg-gray-50' : ''}>
+                                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                                <span className="truncate max-w-[200px] sm:max-w-none">{user.email}</span>
+                                                                {user.status === 'disabled' && (
+                                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                                        Devre Dışı
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {editingUser === user.uid ? (
+                                                                <select
+                                                                    value={user.role}
+                                                                    onChange={(e) => handleRoleChange(user.uid, e.target.value as UserRole)}
+                                                                    className="w-full sm:w-auto px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                                    disabled={user.status === 'disabled'}
+                                                                >
+                                                                    <option value="user">İstifadəçi</option>
+                                                                    <option value="admin">Admin</option>
+                                                                </select>
+                                                            ) : (
+                                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                                    user.role === 'admin' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'
+                                                                }`}>
+                                                                    {user.role === 'admin' ? 'Admin' : 'İstifadəçi'}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                            <div className="flex flex-col sm:flex-row justify-end gap-2">
+                                                                {resettingPasswordFor === user.uid ? (
+                                                                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                                                                        <div className="flex flex-col gap-2 w-full sm:w-auto">
+                                                                            <input
+                                                                                type="password"
+                                                                                placeholder="Yeni şifre"
+                                                                                value={passwordResetForm.newPassword}
+                                                                                onChange={(e) => setPasswordResetForm(prev => ({
+                                                                                    ...prev,
+                                                                                    newPassword: e.target.value
+                                                                                }))}
+                                                                                className="w-full sm:w-32 px-3 py-1 border rounded-md text-sm"
+                                                                            />
+                                                                            <input
+                                                                                type="password"
+                                                                                placeholder="Şifre tekrar"
+                                                                                value={passwordResetForm.confirmPassword}
+                                                                                onChange={(e) => setPasswordResetForm(prev => ({
+                                                                                    ...prev,
+                                                                                    confirmPassword: e.target.value
+                                                                                }))}
+                                                                                className="w-full sm:w-32 px-3 py-1 border rounded-md text-sm"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="flex gap-2">
+                                                                            <button
+                                                                                onClick={() => handlePasswordReset(user.uid)}
+                                                                                className="text-green-600 hover:text-green-900"
+                                                                            >
+                                                                                Güncelle
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setResettingPasswordFor(null);
+                                                                                    setPasswordResetForm({
+                                                                                        newPassword: '',
+                                                                                        confirmPassword: ''
+                                                                                    });
+                                                                                }}
+                                                                                className="text-gray-600 hover:text-gray-900"
+                                                                            >
+                                                                                İptal
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex gap-2 justify-end">
+                                                                        <button
+                                                                            onClick={() => setEditingUser(user.uid)}
+                                                                            className="text-indigo-600 hover:text-indigo-900"
+                                                                        >
+                                                                            Düzenle
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (window.confirm(`${user.email} istifadəçisini ${user.status === 'active' ? 'deactiv etmək' : 'aktif etmək'} isdədiyinizdən əminsiniz?`)) {
+                                                                                    handleUserStatus(user.uid);
+                                                                                }
+                                                                            }}
+                                                                            className={`${
+                                                                                user.status === 'active' 
+                                                                                    ? 'text-red-600 hover:text-red-900' 
+                                                                                    : 'text-green-600 hover:text-green-900'
+                                                                            }`}
+                                                                        >
+                                                                            {user.status === 'active' ? 'Deactive et' : 'Aktif Et'}
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             )}
                         </motion.div>
@@ -458,10 +495,10 @@ export default function AdminPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="bg-white rounded-2xl shadow-sm p-6"
+                            className="bg-white rounded-2xl shadow-sm p-4 sm:p-6"
                         >
                             <h2 className="text-xl font-semibold text-gray-800 mb-4">Yeni İstifadəçi əlavə et</h2>
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                                 <div className="space-y-4">
                                     <div>
                                         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -472,7 +509,7 @@ export default function AdminPage() {
                                             id="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+                                            className="mt-1 block w-full px-4 py-2 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
                                             required
                                             disabled={isSubmitting}
                                         />
@@ -487,7 +524,7 @@ export default function AdminPage() {
                                             id="password"
                                             value={formData.password}
                                             onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+                                            className="mt-1 block w-full px-4 py-2 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
                                             required
                                             disabled={isSubmitting}
                                         />
@@ -501,7 +538,7 @@ export default function AdminPage() {
                                             id="role"
                                             value={formData.role}
                                             onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as UserRole }))}
-                                            className="mt-1 block w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+                                            className="mt-1 block w-full px-4 py-2 sm:py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
                                             disabled={isSubmitting}
                                         >
                                             <option value="user">İstifadəçi</option>
@@ -536,12 +573,12 @@ export default function AdminPage() {
                                         disabled={isSubmitting}
                                         whileHover={{ scale: 1.01 }}
                                         whileTap={{ scale: 0.99 }}
-                                        className={`px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-xl hover:from-indigo-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                                        className={`w-full sm:w-auto px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-xl hover:from-indigo-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
                                             isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
                                         }`}
                                     >
                                         {isSubmitting ? (
-                                            <div className="flex items-center">
+                                            <div className="flex items-center justify-center">
                                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                                                 Əməliyyat...
                                             </div>

@@ -125,94 +125,103 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
         <div className="space-y-4">
             {/* Arama ve filtreleme */}
             <div className="bg-white rounded-2xl shadow-sm p-4">
-                <div className="flex flex-wrap gap-4 text-black">
-                    <div className="flex-1 min-w-[200px]">
+                <div className="flex flex-col gap-4">
+                    <div className="w-full">
                         <input
                             type="text"
                             placeholder="Fayl axtar..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
                         />
                     </div>
-                    <select
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value as FileType | 'all')}
-                        className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                        <option value="all">Bütün Fayllar</option>
-                        <option value="pdf">PDF</option>
-                        <option value="word">Word</option>
-                        <option value="excel">Excel</option>
-                        <option value="other">Diğər</option>
-                    </select>
-                    <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as SortOption)}
-                        className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                        <option value="newest">Yeni Fayllar</option>
-                        <option value="oldest">Köhnə Fayllar</option>
-                        <option value="largest">Böyük Ölçülü</option>
-                        <option value="smallest">Kiçik Ölçülü</option>
-                        <option value="name">Ad siyahısına</option>
-                    </select>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <select
+                            value={selectedType}
+                            onChange={(e) => setSelectedType(e.target.value as FileType | 'all')}
+                            className="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+                        >
+                            <option value="all">Bütün Fayllar</option>
+                            <option value="pdf">PDF</option>
+                            <option value="word">Word</option>
+                            <option value="excel">Excel</option>
+                            <option value="other">Diğər</option>
+                        </select>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as SortOption)}
+                            className="w-full sm:w-1/2 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+                        >
+                            <option value="newest">Yeni Fayllar</option>
+                            <option value="oldest">Köhnə Fayllar</option>
+                            <option value="largest">Böyük Ölçülü</option>
+                            <option value="smallest">Kiçik Ölçülü</option>
+                            <option value="name">Ad siyahısına</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
             {/* Dosya listesi */}
-            <div className="bg-white rounded-2xl shadow-sm divide-y">
+            <div className="bg-white rounded-2xl shadow-sm divide-y mt-4">
                 {paginatedFiles.map((file, index) => (
                     <motion.div
                         key={file.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="p-4 flex items-center justify-between hover:bg-gray-50"
+                        className="p-4 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50 gap-4"
                     >
-                        <div className="flex items-center space-x-4">
-                            {getFileIcon(file.type)}
+                        <div className="flex items-start space-x-4 min-w-0">
+                            <div className="flex-shrink-0 pt-1">
+                                {getFileIcon(file.type)}
+                            </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
+                                <p className="text-sm font-medium text-gray-900 break-all line-clamp-2 sm:line-clamp-1">
                                     {truncateFileName(file.title || file.name)}
                                 </p>
-                                <p className="text-sm text-gray-500">
-                                    {new Date(file.createdAt).toLocaleDateString('tr-TR')} • {(file.size / 1024 / 1024).toFixed(2)} MB
-                                </p>
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1 text-xs text-gray-500">
+                                    <span>{new Date(file.createdAt).toLocaleDateString('tr-TR')}</span>
+                                    <span>{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                </div>
                                 {file.description && (
-                                    <p className="text-sm text-gray-500 mt-1 truncate">
+                                    <p className="text-sm text-gray-500 mt-1 break-all line-clamp-2">
                                         {file.description}
                                     </p>
                                 )}
                             </div>
                         </div>
                         
-                        <div className="flex items-center space-x-2 ml-4">
-                            <div className="flex items-center space-x-1 text-gray-500 text-sm">
-                                <FiEye className="w-4 h-4" />
-                                <span>{file.views}</span>
+                        <div className="flex items-center justify-between sm:justify-end gap-4 mt-4 sm:mt-0">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1 text-gray-500 text-sm">
+                                    <FiEye className="w-4 h-4" />
+                                    <span>{file.views}</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-gray-500 text-sm">
+                                    <FiDownloadCloud className="w-4 h-4" />
+                                    <span>{file.downloads}</span>
+                                </div>
                             </div>
-                            <div className="flex items-center space-x-1 text-gray-500 text-sm">
-                                <FiDownloadCloud className="w-4 h-4" />
-                                <span>{file.downloads}</span>
-                            </div>
-                            <button
-                                onClick={() => onDownload(file.downloadURL, file.name)}
-                                className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
-                                title="İndir"
-                            >
-                                <FiDownload className="w-5 h-5" />
-                            </button>
-                            
-                            {userRole === 'admin' && onDelete && (
+                            <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => onDelete(file.id)}
-                                    className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                                    title="Sil"
+                                    onClick={() => onDownload(file.downloadURL, file.name)}
+                                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                                    title="İndir"
                                 >
-                                    <FiTrash2 className="w-5 h-5" />
+                                    <FiDownload className="w-5 h-5" />
                                 </button>
-                            )}
+                                
+                                {userRole === 'admin' && onDelete && (
+                                    <button
+                                        onClick={() => onDelete(file.id)}
+                                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                                        title="Sil"
+                                    >
+                                        <FiTrash2 className="w-5 h-5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
                 ))}
@@ -220,7 +229,7 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
 
             {/* Pagination controls */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center space-x-2 mt-4 pb-4">
+                <div className="flex flex-wrap justify-center items-center gap-2 mt-4 pb-4">
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
@@ -229,19 +238,21 @@ export default function FileList({ files, userRole, isLoading, onDownload, onDel
                         <FiChevronLeft className="w-5 h-5" />
                     </button>
                     
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`px-4 py-2 rounded-lg ${
-                                currentPage === page
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            {page}
-                        </button>
-                    ))}
+                    <div className="flex flex-wrap gap-2 justify-center">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => handlePageChange(page)}
+                                className={`w-8 h-8 flex items-center justify-center rounded-lg ${
+                                    currentPage === page
+                                        ? 'bg-indigo-600 text-white'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
                     
                     <button
                         onClick={() => handlePageChange(currentPage + 1)}

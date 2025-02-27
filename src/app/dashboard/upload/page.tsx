@@ -16,6 +16,7 @@ export default function UploadPage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
         handleProtectedNavigation('/dashboard/upload');
@@ -122,36 +123,64 @@ export default function UploadPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar user={{
-                id: userData.uid,
-                username: userData.email || '',
-                role: userData.role
-            }} />
+            <Navbar 
+                user={{
+                    id: userData.uid,
+                    username: userData.email || '',
+                    role: userData.role
+                }}
+                isSidebarOpen={isSidebarOpen}
+                onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            />
             
-            <div className="flex">
-                <Sidebar />
+            <div className="flex relative">
+                {/* Admin için sidebar */}
+                {userData.role === 'admin' && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ 
+                            opacity: 1, 
+                            x: 0,
+                            translateX: isSidebarOpen ? '0%' : '-100%'
+                        }}
+                        transition={{ duration: 0.3 }}
+                        className={`fixed lg:relative lg:translate-x-0 top-0 left-0 h-full z-40 bg-white shadow-xl lg:shadow-none ${
+                            isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                        }`}
+                    >
+                        <Sidebar />
+                    </motion.div>
+                )}
 
-                <main className="flex-1 p-6">
+                {/* Overlay for mobile sidebar */}
+                {isSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
+
+                <main className="flex-1 p-4 sm:p-6 w-full">
                     <div className="max-w-7xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+                        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-6">
                             <motion.div
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2 text-black">
+                                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-500 text-transparent bg-clip-text mb-2">
                                     Fayl Yükleme
                                 </h1>
                                 <p className="text-gray-600 mb-6">
                                     Sisteme yeni fayllar yükləyə bilərsiniz.
                                 </p>
 
-                                <div className="space-y-6">
+                                <div className="space-y-4 sm:space-y-6">
                                     {/* Tekli dosya yükleme */}
-                                    <div className="bg-gray-50 p-6 rounded-xl">
+                                    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl">
                                         <h2 className="text-lg font-semibold mb-4 text-black">Tək Fayl Yükleme</h2>
                                         <div className="space-y-4">
-                                            <div className="flex gap-4">
+                                            <div className="flex flex-col sm:flex-row gap-4">
                                                 <input
                                                     type="file"
                                                     onChange={handleSingleFileUpload}
@@ -169,18 +198,19 @@ export default function UploadPage() {
                                                 onChange={(e) => setDescription(e.target.value)}
                                                 placeholder="Açıqlama (isteğe bağlı)"
                                                 className="w-full p-2 border rounded text-black"
+                                                rows={3}
                                             />
                                         </div>
                                     </div>
 
                                     {/* Toplu dosya yükleme */}
-                                    <div className="bg-gray-50 p-6 rounded-xl">
+                                    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl">
                                         <h2 className="text-lg font-semibold mb-4 text-black">Toplu Fayl Yükleme</h2>
                                         <div
                                             onDragOver={handleDragOver}
                                             onDragLeave={handleDragLeave}
                                             onDrop={handleDrop}
-                                            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                                            className={`border-2 border-dashed rounded-xl p-4 sm:p-8 text-center transition-colors ${
                                                 isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300'
                                             }`}
                                         >
@@ -210,11 +240,11 @@ export default function UploadPage() {
                                     <button
                                         onClick={handleUploadButtonClick}
                                         disabled={isUploading || !selectedFile}
-                                        className={`px-6 py-2 bg-indigo-600 text-white rounded-lg transition-colors ${
+                                        className={`w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white rounded-lg transition-colors ${
                                             isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-700'
                                         }`}
                                     >
-                                        Yükle
+                                        {isUploading ? 'Yüklənir...' : 'Yükle'}
                                     </button>
                                 </div>
                             </motion.div>
