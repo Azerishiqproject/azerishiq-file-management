@@ -177,4 +177,27 @@ export const deleteFile = async (id: string) => {
         handleError(error, 'Failed to delete file');
         throw error;
     }
+};
+
+// Dosya indirme fonksiyonunu güncelle
+export const getDirectDownloadURL = async (fileId: string): Promise<string> => {
+    try {
+        const docRef = doc(db, 'docs', fileId);
+        const docSnap = await getDoc(docRef);
+        
+        if (!docSnap.exists()) {
+            throw new Error('Fayl tapılmadı');
+        }
+
+        const fileData = docSnap.data();
+        if (!fileData.downloadURL) {
+            throw new Error('Download URL tapılmadı');
+        }
+
+        // Firebase Storage'dan direkt download URL'ini döndür
+        return fileData.downloadURL;
+    } catch (error) {
+        handleError(error, 'Fayl download URL alınarkən xəta baş verdi');
+        throw error;
+    }
 }; 
