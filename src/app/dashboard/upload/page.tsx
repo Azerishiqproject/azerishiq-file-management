@@ -58,6 +58,15 @@ export default function UploadPage() {
             return;
         }
 
+        // Total size check for multiple files (5GB limit)
+        const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+        const MAX_TOTAL_SIZE = 5 * 1024 * 1024 * 1024; // 5GB in bytes
+        
+        if (totalSize > MAX_TOTAL_SIZE) {
+            toast.error('Ümumi fayl həcmi 5GB-dan çox ola bilməz');
+            return;
+        }
+
         try {
             setIsUploading(true);
             await uploadMultipleFiles(files);
@@ -193,6 +202,9 @@ export default function UploadPage() {
                                                         hover:file:bg-indigo-100"
                                                 />
                                             </div>
+                                            <p className="text-sm text-gray-500">
+                                                Maksimum fayl ölçüsü: 100MB
+                                            </p>
                                             <textarea
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
@@ -229,7 +241,7 @@ export default function UploadPage() {
                                                     hover:file:bg-indigo-100"
                                             />
                                             <p className="text-sm text-gray-500 mt-2">
-                                                Maksimum 50 fayl seçə bilərsiniz
+                                                Maksimum 50 fayl seçə bilərsiniz (ümumi həcm: 5GB-a qədər)
                                             </p>
                                         </div>
                                     </div>
