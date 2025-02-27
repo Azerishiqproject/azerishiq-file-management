@@ -214,10 +214,7 @@ export default function DashboardPage() {
                             <FileList 
                                 files={files} 
                                 userRole={userData.role}
-                                onDownload={(downloadURL: string, _: string) => {
-                                    handleDownload(downloadURL);
-                                    return void 0;
-                                }}
+                                onDownload={handleDownload}
                                 onDelete={userData.role === 'admin' ? handleDelete : undefined}
                                 isLoading={isLoading}
                             />
