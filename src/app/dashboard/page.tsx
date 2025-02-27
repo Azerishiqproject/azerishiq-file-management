@@ -79,14 +79,26 @@ export default function DashboardPage() {
         }
     }, [handleProtectedNavigation, userData, fetchFiles]);
 
-    const handleDownload = async (downloadURL: string) => {
+    const handleDownload = async (downloadURL: string, fileName: string) => {
         try {
+            console.log('Download URL:', downloadURL);
             if (!downloadURL) {
                 throw new Error('İndirme bağlantısı bulunamadı');
             }
 
-            // Tarayıcıda yeni sekmede aç
-            window.open(downloadURL, '_blank');
+            // Fetch API ile dosyayı indir
+            const response = await fetch(downloadURL);
+            if (!response.ok) {
+                throw new Error('Fayl yüklənmədi');
+            }
+
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             toast.success('Fayl yüklənir...');
         } catch (error) {
             console.error('Download error:', error);
@@ -214,7 +226,10 @@ export default function DashboardPage() {
                             <FileList 
                                 files={files} 
                                 userRole={userData.role}
-                                onDownload={handleDownload}
+                                onDownload={(downloadURL: string, fileName: string) => {
+                                    handleDownload(downloadURL, fileName);
+                                    return void 0;
+                                }}
                                 onDelete={userData.role === 'admin' ? handleDelete : undefined}
                                 isLoading={isLoading}
                             />

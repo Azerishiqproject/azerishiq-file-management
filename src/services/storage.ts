@@ -1,8 +1,8 @@
 import { FileData } from '@/types/file';
 import { toast } from 'react-hot-toast';
 import { db } from '@/config/firebase';
-import { collection, getDocs, doc, deleteDoc, getDoc } from 'firebase/firestore';
-import { getStorage, ref, deleteObject } from 'firebase/storage';
+import { collection, getDocs, doc, deleteDoc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref, deleteObject, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // API endpoint'leri
 const API_ENDPOINTS = {
@@ -64,28 +64,52 @@ export const listFiles = async (): Promise<FileData[]> => {
 export const uploadFile = async (file: File, description: string) => {
     const loadingToast = toast.loading('Fayl yüklənir...');
     try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('description', description);
+        // Benzersiz dosya adı oluştur
+        const timestamp = Date.now();
+        const uniqueFileName = `${timestamp}-${file.name}`;
+        const filePath = `docs/${uniqueFileName}`;
 
-        const response = await fetch(API_ENDPOINTS.UPLOAD, {
-            method: 'POST',
-            body: formData
+        // Storage referansı oluştur
+        const storageRef = ref(storage, filePath);
+        
+        // Dosyayı yükle
+        await uploadBytes(storageRef, file);
+        
+        // Download URL al
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // Firestore'a metadata kaydet
+        const docRef = await addDoc(docsCollection, {
+            name: file.name,
+            description: description || '',
+            size: file.size,
+            type: file.type,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            downloadURL,
+            path: filePath,
+            status: 'active',
+            views: 0,
+            downloads: 0,
+            uploadedBy: 'anonymous',
+            uploadedByEmail: 'anonymous'
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
-            console.error('Upload error response:', errorData);
-            throw new Error(errorData.details || errorData.error || 'Dosya yüklenirken bir hata oluştu');
-        }
-
-        const data = await response.json();
         toast.success('Fayl uğurla yüklendi', {
             id: loadingToast
         });
-        return data as FileData;
+
+        return {
+            id: docRef.id,
+            name: file.name,
+            description,
+            size: file.size,
+            type: file.type,
+            downloadURL,
+            path: filePath
+        };
     } catch (error) {
-        console.error('Upload error details:', error);
+        console.error('Upload error:', error);
         toast.error(error instanceof Error ? error.message : 'Fayl yüklənərkən xəta baş verdi', {
             id: loadingToast
         });
@@ -97,29 +121,56 @@ export const uploadFile = async (file: File, description: string) => {
 export const uploadMultipleFiles = async (files: File[]) => {
     const loadingToast = toast.loading(`${files.length} fayl yüklənir...`);
     try {
-        const uploadPromises = files.map(file => {
-            const formData = new FormData();
-            formData.append('file', file);
+        const uploadPromises = files.map(async (file) => {
+            // Benzersiz dosya adı oluştur
+            const timestamp = Date.now();
+            const uniqueFileName = `${timestamp}-${file.name}`;
+            const filePath = `docs/${uniqueFileName}`;
 
-            return fetch(API_ENDPOINTS.UPLOAD, {
-                method: 'POST',
-                body: formData
-            }).then(async response => {
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Bilinmeyen hata' }));
-                    throw new Error(errorData.details || errorData.error || `${file.name} yüklenirken hata oluştu`);
-                }
-                return response.json();
+            // Storage referansı oluştur
+            const storageRef = ref(storage, filePath);
+            
+            // Dosyayı yükle
+            await uploadBytes(storageRef, file);
+            
+            // Download URL al
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Firestore'a metadata kaydet
+            const docRef = await addDoc(docsCollection, {
+                name: file.name,
+                description: '',
+                size: file.size,
+                type: file.type,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                downloadURL,
+                path: filePath,
+                status: 'active',
+                views: 0,
+                downloads: 0,
+                uploadedBy: 'anonymous',
+                uploadedByEmail: 'anonymous'
             });
+
+            return {
+                id: docRef.id,
+                name: file.name,
+                description: '',
+                size: file.size,
+                type: file.type,
+                downloadURL,
+                path: filePath
+            };
         });
 
         const results = await Promise.all(uploadPromises);
         toast.success(`${files.length} fayl uğurla yüklendi`, {
             id: loadingToast
         });
-        return results as FileData[];
+        return results;
     } catch (error) {
-        console.error('Bulk upload error details:', error);
+        console.error('Bulk upload error:', error);
         toast.error(error instanceof Error ? error.message : 'Fayllar yüklənərkən xəta baş verdi', {
             id: loadingToast
         });
@@ -175,29 +226,6 @@ export const deleteFile = async (id: string) => {
         return { success: true };
     } catch (error) {
         handleError(error, 'Failed to delete file');
-        throw error;
-    }
-};
-
-// Dosya indirme fonksiyonunu güncelle
-export const getDirectDownloadURL = async (fileId: string): Promise<string> => {
-    try {
-        const docRef = doc(db, 'docs', fileId);
-        const docSnap = await getDoc(docRef);
-        
-        if (!docSnap.exists()) {
-            throw new Error('Fayl tapılmadı');
-        }
-
-        const fileData = docSnap.data();
-        if (!fileData.downloadURL) {
-            throw new Error('Download URL tapılmadı');
-        }
-
-        // Firebase Storage'dan direkt download URL'ini döndür
-        return fileData.downloadURL;
-    } catch (error) {
-        handleError(error, 'Fayl download URL alınarkən xəta baş verdi');
         throw error;
     }
 }; 
