@@ -79,7 +79,7 @@ export default function DashboardPage() {
         }
     }, [handleProtectedNavigation, userData, fetchFiles]);
 
-    const handleDownload = async (downloadURL: string, fileName: string) => {
+    const handleDownload = async (downloadURL: string) => {
         try {
             if (!downloadURL) {
                 throw new Error('İndirme bağlantısı bulunamadı');
@@ -215,7 +215,7 @@ export default function DashboardPage() {
                                 files={files} 
                                 userRole={userData.role}
                                 onDownload={(downloadURL: string, fileName: string) => {
-                                    handleDownload(downloadURL, fileName);
+                                    handleDownload(downloadURL);
                                     return void 0;
                                 }}
                                 onDelete={userData.role === 'admin' ? handleDelete : undefined}
